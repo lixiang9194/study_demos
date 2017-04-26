@@ -41,20 +41,20 @@ namespace CPWGI
             ChartValues<ObservablePoint> CV = new ChartValues<ObservablePoint>();
             double X = 0, Y = 0;
             int tt = Convert.ToInt32(txttime.Text);
-            for (int i = 1; i < WellBore.wellBoreGrid.Count; i++)
-            {
-                X = WellBore.wellBoreGrid[i].wellDepth;
-                Y = Result.wellborePressure[tt][i] / 1000;
-                CV.Add(new ObservablePoint(X, Y));
-            }
-            int length = WellBore.wellBoreGrid.Count - 1;
-
-            //for (int i = 0; i < Result.wellborePressure.Count; i++)
+            //for (int i = 1; i < WellBore.wellBoreGrid.Count; i++)
             //{
-            //    X = Result.time[i];
-            //    Y = Result.wellborePressure[i][length];
+            //    X = WellBore.wellBoreGrid[i].wellDepth;
+            //    Y = Result.wellborePressure[tt][i] / 1000;
             //    CV.Add(new ObservablePoint(X, Y));
             //}
+            int length = WellBore.wellBoreGrid.Count - 1;
+
+            for (int i = 0; i < Result.wellborePressure.Count; i++)
+            {
+                X = Result.time[i];
+                Y = Result.wellborePressure[i][length];
+                CV.Add(new ObservablePoint(X, Y));
+            }
 
             SC = new SeriesCollection
             {
@@ -64,7 +64,7 @@ namespace CPWGI
                 },
             };
             lvcChart.Series = SC;
-            MessageBox.Show("画图完成！");
+            //MessageBox.Show("画图完成！");
         }
 
         public MainWindow()

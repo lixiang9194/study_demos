@@ -24,7 +24,7 @@ namespace CPWGI.View
         public DrillMudClass Mud { get; set; }
         public MudPropertyView()
         {
-            Mud = new DrillMudClass(1008, 0.020,0.05678);
+            Mud = new DrillMudClass(1080, 0.050,0.05678);
             InitializeComponent();
             DataContext = this;
         }

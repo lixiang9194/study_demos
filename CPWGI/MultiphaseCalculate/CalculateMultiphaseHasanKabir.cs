@@ -34,7 +34,7 @@ namespace CPWGI.MultiphaseCalculate
         /// </summary>
         public override double calculateHoldupGas(double volocitySuperficalGas, double volocitySuperficalLiquid, double densityGas, double densityLiquid, double viscosityGas, double viscosityLiquid, double tensionInterface)
         {
-            if (volocitySuperficalGas<=0)
+            if (volocitySuperficalGas==0)
             { rheology = rheologys.singleMud; holdupGas = 0; return holdupGas; }
             double volocityMixture = volocitySuperficalGas + volocitySuperficalLiquid;
             double densityMixture;

@@ -18,7 +18,9 @@ namespace CPWGI.MultiphaseCalculate
             pressure = pressure / 1000;
             temperature = temperature - 273.15;
             tension = (248 - 1.8 * temperature) / 206 * (76 * Math.Exp(-0.0003625 * pressure) - 52.5 + 0.00087 * pressure) + 52.5 - 0.00087 * pressure;
-            return tension/1000;
+            //return tension/1000;
+            return 0.05;
+            //todo 界面张力修改为了定值
         }
     }
 }

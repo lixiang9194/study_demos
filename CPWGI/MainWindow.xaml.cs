@@ -44,7 +44,7 @@ namespace CPWGI
             //for (int i = 1; i < WellBore.wellBoreGrid.Count; i++)
             //{
             //    X = WellBore.wellBoreGrid[i].wellDepth;
-            //    Y = Result.wellborePressure[tt][i] / 1000;
+            //    Y = Result.wellborePressure[tt][i] / 1000000;
             //    CV.Add(new ObservablePoint(X, Y));
             //}
             int length = WellBore.wellBoreGrid.Count - 1;

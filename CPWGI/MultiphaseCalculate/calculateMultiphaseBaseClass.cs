@@ -9,13 +9,24 @@ namespace CPWGI.MultiphaseCalculate
 {
     abstract public class calculateMultiphaseBaseClass
     {
-        public double frictionFactorError { get; set; }
-        public double holdupQasError { get; set; }
-        
+        /// <summary>
+        /// 设置摩阻系数计算精度，默认0.0001
+        /// </summary>
+        public double frictionFactorError { get; set; } = 0.0001;
+        /// <summary>
+        /// 设置含气率计算精度，默认0.0001
+        /// </summary>
+        public double holdupQasError { get; set; } = 0.0001;
+
+        /// <summary>
+        /// 设置摩阻系数计算方法，默认为Corebook公式
+        /// </summary>
+        public CalFrictionMethods CalFMethod { get; set; } = CalFrictionMethods.Corebook;
+
         /// <summary>
         /// 当前环空流型
         /// </summary>
-        public rheologys rheology { get; set; }
+        public rheologys rheology { get; set; } = rheologys.unknown;
         public double outterDiameter { get; set; }
         public double innerDiameter { get; set; }
         /// <summary>
@@ -30,14 +41,8 @@ namespace CPWGI.MultiphaseCalculate
         /// 单位长度压降
         /// </summary>
         public double dPdZ { get; set; }
-        public static double gravity = 9.81;
-        public calculateMultiphaseBaseClass()
-        {
-            frictionFactorError = 0.0001;
-            holdupQasError = 0.0001;
-            rheology = rheologys.unknown;
-            holdupGas = 0;
-        }
+        public double dPdZf { get; set; }
+        protected const double gravity = 9.81;
 
         /// <summary>
         /// 设置环空内外径并更新相关参数
@@ -58,5 +63,10 @@ namespace CPWGI.MultiphaseCalculate
     /// <summary>
     /// 流型枚举
     /// </summary>
-    public enum rheologys { disperedBubble, bubble, slug, churn, annular, unknown };
+    public enum rheologys { singleMud,disperedBubble, bubble, slug, churn, annular, unknown };
+    
+    /// <summary>
+    /// 摩阻系数计算方法枚举
+    /// </summary>
+    public enum CalFrictionMethods{ Fanning, Corebook,Simple }
 }

@@ -31,8 +31,7 @@ namespace CPWGI
         public GasClass Gas { get; set; }
         public CalculateMultiphaseHasanKabir Calculate { get; set; }
         public ResultMatrix Result { get; set; }
-        //todo井口回压在这里添加并不合适
-        public double PressureWellHead { get; set; }
+        public double PressureWellHead { get; set; } = 4000000;
         public double ErrorWell = 10000, ErrorSegment = 1000, ErrorHoldup = 0.0001;
         public ControlCalculateClass CC { get; set; }
         public SeriesCollection SC { get; set; }
@@ -41,12 +40,21 @@ namespace CPWGI
         {
             ChartValues<ObservablePoint> CV = new ChartValues<ObservablePoint>();
             double X = 0, Y = 0;
+            int tt = Convert.ToInt32(txttime.Text);
             for (int i = 1; i < WellBore.wellBoreGrid.Count; i++)
             {
                 X = WellBore.wellBoreGrid[i].wellDepth;
-                Y = Result.wellborePressure[0][i]/1000;
+                Y = Result.wellborePressure[tt][i] / 1000;
                 CV.Add(new ObservablePoint(X, Y));
             }
+            int length = WellBore.wellBoreGrid.Count - 1;
+
+            //for (int i = 0; i < Result.wellborePressure.Count; i++)
+            //{
+            //    X = Result.time[i];
+            //    Y = Result.wellborePressure[i][length];
+            //    CV.Add(new ObservablePoint(X, Y));
+            //}
 
             SC = new SeriesCollection
             {
@@ -62,8 +70,7 @@ namespace CPWGI
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = this;
-            
+            DataContext = this; 
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -73,11 +80,15 @@ namespace CPWGI
             WellBore = wellBoreView.wellBore;
             Mud = mudPropertyView.Mud;
             Gas = gasPropertyView.Gas;
-            WellBore.addSection(1000, 8, 3.5);
+            WellBore.addSection(4500, 6, 3.5);
             WellBore.meshWell();
-            CC = new ControlCalculateClass(WellBore, Mud, Gas, Calculate, Result);
-            CC.CalculateSteady(50, 10);
-            MessageBox.Show("计算完成！");
+            CC = new ControlCalculateClass(WellBore, Mud, Gas, Calculate, Result,PressureWellHead);
+            CC.CalculateSteadyT(0, 0);
+            Task.Run(
+                () => CC.CalMultiphaseFlow(5, 1)
+            );
+
+
         }
     }
 }

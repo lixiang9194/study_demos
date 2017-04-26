@@ -21,7 +21,7 @@ namespace CPWGI.Model
         public ObservableCollection<WellSection> wellSectionList { get; set; }
 
         public double groundTemperature { get; set; }
-        public double temperaturePerMeter { get; set; }
+        public double temperaturePer100Meter { get; set; }
 
         public WellBoreClass(string wellName="well") {
             this.wellName = wellName;
@@ -45,7 +45,9 @@ namespace CPWGI.Model
         public List<WellGrid> meshWell()
         {
             wellBoreGrid = new List<WellGrid>();
-            wellBoreGrid.Add(new WellGrid());
+            //添加井口第一个网格
+            WellGrid item0 = new WellGrid(0, wellSectionList[0].outterDiameter, wellSectionList[0].innerDiameter,groundTemperature);
+            wellBoreGrid.Add(item0);
             WellGrid item = null;
             int counter = 1;
             double layerLength = 0,temperature=0;
@@ -60,7 +62,7 @@ namespace CPWGI.Model
                         layerLength = wellBoreGrid[counter - 1].wellDepth + section.sectionLength - (i - 1) * meshLength;
                     //每次在此处新建对象，则List显示正常
                     //（如果仅在此处更改项的值，则List内所有子项指向同一个对象，错误）
-                    temperature = groundTemperature + layerLength * temperaturePerMeter;
+                    temperature = groundTemperature + layerLength * temperaturePer100Meter/100;
                     item = new WellGrid(layerLength,section.outterDiameter,section.innerDiameter,temperature);
                     wellBoreGrid.Add(item);
                     counter++;

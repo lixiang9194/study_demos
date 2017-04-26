@@ -21,7 +21,7 @@
         </StackPanel>
 
         <StackPanel Orientation="Vertical" Margin="10,200,0,0">
-
+            <TextBox  Name="txttime" TextWrapping="Wrap" Text="0" Width="120" FontSize="14"/>
             <Button Content="计算" Width="76" Click="Button_Click"/>
             <Button Content="画图" Width="76" Click="Button_Click_1"/>
             <lvc:CartesianChart Name="lvcChart" Height="365" Width="375">
@@ -29,6 +29,7 @@
             </lvc:CartesianChart>
 
         </StackPanel>
+        
 
     </StackPanel>
 </Window>

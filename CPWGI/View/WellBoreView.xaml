@@ -61,7 +61,7 @@
                 <TextBox Name="txbGroundT" Text="25" Width="75" FontSize="14" LostFocus="txbGroundT_LostFocus"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Label Content="地温梯度(°C/m):" FontSize="12" />
+                <Label Content="地温梯度(°C/100m):" FontSize="12" />
                 <TextBox Name="txbdTdH" Text="4" Width="75" FontSize="14" LostFocus="txbdTdH_LostFocus"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">

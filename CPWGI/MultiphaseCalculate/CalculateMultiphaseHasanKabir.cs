@@ -34,9 +34,8 @@ namespace CPWGI.MultiphaseCalculate
         /// </summary>
         public override double calculateHoldupGas(double volocitySuperficalGas, double volocitySuperficalLiquid, double densityGas, double densityLiquid, double viscosityGas, double viscosityLiquid, double tensionInterface)
         {
-            if (volocitySuperficalGas == 0)
-            { holdupGas = 0;rheology = rheologys.bubble; return holdupGas; }
-
+            if (volocitySuperficalGas<=0)
+            { rheology = rheologys.singleMud; holdupGas = 0; return holdupGas; }
             double volocityMixture = volocitySuperficalGas + volocitySuperficalLiquid;
             double densityMixture;
             
@@ -60,6 +59,7 @@ namespace CPWGI.MultiphaseCalculate
             bool principleChurn = volocitySuperficalGas < 3.1 * Math.Pow(tensionInterface * gravity * (densityLiquid - densityGas) / densityGas / densityGas, 0.25);
 
             //判断流态,注意判断顺序
+            
             if (holdupGasBubble <= 0.25 && volocityBubbleFinal < volocityTaylerFinal)
             {
                 rheology = rheologys.bubble;
@@ -85,7 +85,11 @@ namespace CPWGI.MultiphaseCalculate
                 rheology = rheologys.annular;
                 holdupGas = 1.0;
             }
-
+            //if (holdupGasBubble <= 0.001 || volocitySuperficalGas <= 0)
+            //{
+            //    rheology = rheologys.singleMud;
+            //    holdupGas = 0;
+            //}
             return holdupGas;
         }
 
@@ -101,20 +105,42 @@ namespace CPWGI.MultiphaseCalculate
             else
             {
                 double volocityMixture = volocitySuperficalGas + volocitySuperficalLiquid;
-                double densityMixure = densityGas * holdupGas + densityLiquid * holdupLiquid;
+                double densityMixture = densityGas * holdupGas + densityLiquid * holdupLiquid;
                 double viscosityMixture = viscosityGas * holdupGas + viscosityLiquid * holdupLiquid;
-                double frictionFactor = calculateFrcitionFactorColebrook(volocityMixture, densityMixure, viscosityGas, viscosityLiquid, holdupGas);
+                double frictionFactor = CalculateFrictionFactor(volocityMixture, densityMixture, viscosityGas, viscosityLiquid, holdupGas);
                 //单位摩阻压降
                 double dPdZfriction;
                 //泡状流
-                if (rheology == rheologys.disperedBubble || rheology == rheologys.bubble)
-                    dPdZfriction = 2 * frictionFactor * volocityMixture * volocityMixture * densityMixure / (outterDiameter - innerDiameter);
+                if (rheology == rheologys.disperedBubble || rheology == rheologys.bubble ||rheology==rheologys.singleMud)
+                    dPdZfriction = 2 * frictionFactor * volocityMixture * volocityMixture * densityMixture / (outterDiameter - innerDiameter);
                 //段塞流和搅拌流
                 else
-                    dPdZfriction = 2 * frictionFactor * volocityMixture * volocityMixture * densityMixure / (outterDiameter - innerDiameter)*(1-holdupGas);
-                dPdZ = dPdZfriction + densityMixure * gravity;
+                    dPdZfriction = 2 * frictionFactor * volocityMixture * volocityMixture * densityMixture / (outterDiameter - innerDiameter)*(1-holdupGas);
+                dPdZ = dPdZfriction + densityMixture * gravity;
+                dPdZf = dPdZfriction;
             }
             return dPdZ;
+        }
+
+        /// <summary>
+        /// 根据不同方法计算摩阻系数
+        /// </summary>
+        private double CalculateFrictionFactor(double volocityMixture, double densityMixture, double viscosityGas, double viscosityLiquid, double holdupGas)
+        {
+            double f = 0;
+            switch (CalFMethod)
+            {
+                case CalFrictionMethods.Fanning:
+                    f = calculateFrictionFanningFactor(volocityMixture, densityMixture, viscosityGas, viscosityLiquid, holdupGas);
+                    break;
+                case CalFrictionMethods.Corebook:
+                    f=calculateFrcitionFactorColebrook(volocityMixture, densityMixture, viscosityGas, viscosityLiquid, holdupGas);
+                    break;
+                case CalFrictionMethods.Simple:
+                    f = 16 * (viscosityGas * holdupGas + viscosityLiquid * holdupLiquid) / densityMixture / Dh / volocityMixture;
+                    break;
+            }
+            return f;
         }
 
         /// <summary>
@@ -134,6 +160,9 @@ namespace CPWGI.MultiphaseCalculate
             return frictionFactor;
         }
         
+        /// <summary>
+        /// 使用Colebrook公式计算摩阻系数
+        /// </summary>
         private double calculateFrcitionFactorColebrook(double volocityMixture, double densityMixture, double viscosityGas, double viscosityLiquid, double holdupGas)
         {
             double frictionFactor = 0;
@@ -141,8 +170,11 @@ namespace CPWGI.MultiphaseCalculate
             double NRe = densityMixture * volocityMixture * Dh / (viscosityGas * holdupGas + viscosityLiquid * (1 - holdupGas));
             Func<double, double> fx = (f) => Math.Pow(f, -0.5) + 4 * Math.Log10(roughness / 3.7 / Dh + 1.255 / NRe / Math.Pow(f, 0.5));
             Func<double, double> dfx = (f) => -0.5 * Math.Pow(f, -1.5) - 2.51 / NRe * Math.Pow(f, -1.5) / (roughness / 3.7 / Dh + 1.255 / NRe / Math.Pow(f, 0.5)) / Math.Log(10);
-            frictionFactor = MathSolveEquations.SolveEquationsWithNewtonDownHillMothod(fx, dfx, 0.001);
+            frictionFactor = MathSolveEquations.SolveEquationsWithNewtonDownHillMothod(fx, dfx, 0.001,frictionFactorError);
             return frictionFactor;
         }
     }
+
+    
+
 }

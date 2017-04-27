@@ -12,7 +12,7 @@ namespace CPWGI.MultiphaseCalculate
         /// 计算水-天然气界面表面张力，参数压力（Pa）温度（K）
         /// </summary>
         /// <returns>表面张力(N/m)</returns>
-        public static double calculateTensionOfWaterAndGas(double pressure,double temperature)
+        public static double CalculateTensionOfWaterAndGas(double pressure,double temperature)
         {
             double tension = 0;
             pressure = pressure / 1000;

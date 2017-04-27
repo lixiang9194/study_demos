@@ -13,7 +13,7 @@ namespace CPWGI.Model
         {
             double GasQuality;
             if (pf > pw)
-                GasQuality = 2 * (pf - pw) / 1000000; 
+                GasQuality = 1 * (pf - pw) / 1000000; 
             else
                 GasQuality = 0;
             return GasQuality;

@@ -17,14 +17,15 @@ namespace CPWGI.MultiphaseCalculate
         public override double calculatedPdZ(double volocitySuperficalGas, double volocitySuperficalLiquid, double densityGas, double densityLiquid, double viscosityGas, double viscosityLiquid)
         {
             dPdZ = 0;
+            double dPdZfriction = 0;
             switch (rheology)
             {
                 case rheologys.disperedBubble:
                 case rheologys.bubble:
                     double volocityMixture = volocitySuperficalGas + volocitySuperficalLiquid;
                     double densityMixture = densityGas * holdupGas + densityLiquid * holdupLiquid;
-                    double frictionFanningFactor = calculateFrictionFanningFactor(volocityMixture, densityMixture, viscosityGas, viscosityLiquid, holdupGas);
-                    double dPdZfriction = 2 * frictionFanningFactor * densityMixture * volocityMixture * volocityMixture / Dh;
+                    double frictionFanningFactor = CalculateFrictionFactor(volocityMixture, densityMixture, viscosityGas, viscosityLiquid, holdupGas);
+                    dPdZfriction = 2 * frictionFanningFactor * densityMixture * volocityMixture * volocityMixture / Dh;
                     dPdZ = dPdZfriction + densityMixture * gravity;
                     break;
                 case rheologys.slug:
@@ -36,6 +37,7 @@ namespace CPWGI.MultiphaseCalculate
                 case rheologys.unknown:
                     break;
             }
+            dPdZf = dPdZfriction;
             return dPdZ;
         }
 
@@ -87,9 +89,27 @@ namespace CPWGI.MultiphaseCalculate
         }
 
         /// <summary>
+        /// 根据不同方法计算摩阻系数
+        /// </summary>
+        private double CalculateFrictionFactor(double volocityMixture, double densityMixture, double viscosityGas, double viscosityLiquid, double holdupGas)
+        {
+            double f = 0;
+            switch (CalFMethod)
+            {
+                case CalFrictionMethods.Fanning:
+                    f = calculateFrictionFanningFactor(volocityMixture, densityMixture, viscosityGas, viscosityLiquid, holdupGas);
+                    break;
+                case CalFrictionMethods.Corebook:
+                    f = calculateFrcitionFactorColebrook(volocityMixture, densityMixture, viscosityGas, viscosityLiquid, holdupGas);
+                    break;
+            }
+            return f;
+        }
+
+        /// <summary>
         /// 计算范宁摩阻系数
         /// </summary>
-        private double calculateFrictionFanningFactor(double volocityMixture,double densityMixture,double viscosityGas,double viscosityLiquid,double holdupGas)
+        private double calculateFrictionFanningFactor(double volocityMixture, double densityMixture, double viscosityGas, double viscosityLiquid, double holdupGas)
         {
             double frictionFactor = 0;
             double NRe = densityMixture * volocityMixture * Dh / (viscosityGas * holdupGas + viscosityLiquid * (1 - holdupGas));
@@ -99,7 +119,21 @@ namespace CPWGI.MultiphaseCalculate
             //使用牛顿下山法解摩阻系数
             Func<double, double> fx = (fF) => Math.Pow(fF * temp, -0.5) - 4 * Math.Log10(NRe * Math.Sqrt(fF * temp)) + 0.4;
             Func<double, double> dfx = (fF) => -0.5 * temp * Math.Pow(fF * temp, -1.5) - 2 / Math.Log(10) / fF;
-            frictionFactor = MathSolveEquations.SolveEquationsWithNewtonDownHillMothod(fx, dfx, 0.1,frictionFactorError);
+            frictionFactor = MathSolveEquations.SolveEquationsWithNewtonDownHillMothod(fx, dfx, 0.1, frictionFactorError);
+            return frictionFactor;
+        }
+
+        /// <summary>
+        /// 使用Colebrook公式计算摩阻系数
+        /// </summary>
+        private double calculateFrcitionFactorColebrook(double volocityMixture, double densityMixture, double viscosityGas, double viscosityLiquid, double holdupGas)
+        {
+            double frictionFactor = 0;
+            double roughness = 0.00033 * 0.001;
+            double NRe = densityMixture * volocityMixture * Dh / (viscosityGas * holdupGas + viscosityLiquid * (1 - holdupGas));
+            Func<double, double> fx = (f) => Math.Pow(f, -0.5) + 4 * Math.Log10(roughness / 3.7 / Dh + 1.255 / NRe / Math.Pow(f, 0.5));
+            Func<double, double> dfx = (f) => -0.5 * Math.Pow(f, -1.5) - 2.51 / NRe * Math.Pow(f, -1.5) / (roughness / 3.7 / Dh + 1.255 / NRe / Math.Pow(f, 0.5)) / Math.Log(10);
+            frictionFactor = MathSolveEquations.SolveEquationsWithNewtonDownHillMothod(fx, dfx, 0.001, frictionFactorError);
             return frictionFactor;
         }
 

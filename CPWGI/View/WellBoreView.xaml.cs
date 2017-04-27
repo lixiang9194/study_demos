@@ -36,7 +36,7 @@ namespace CPWGI.View
             //则这三个值为空，后果很严重！所以要设置初值
             wellBore.meshLength = 10;
             wellBore.groundTemperature = 25;
-            wellBore.temperaturePerMeter = 4;
+            wellBore.temperaturePer100Meter = 2.19;
         }
 
         //井段的编辑功能
@@ -110,7 +110,7 @@ namespace CPWGI.View
                 txbdTdH.Focus();
                 return;
             }
-            wellBore.temperaturePerMeter = value;
+            wellBore.temperaturePer100Meter = value;
         }
 
         private void txbGroundT_LostFocus(object sender, RoutedEventArgs e)

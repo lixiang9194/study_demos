@@ -40,11 +40,11 @@ namespace CPWGI
         {
             ChartValues<ObservablePoint> CV = new ChartValues<ObservablePoint>();
             double X = 0, Y = 0;
-            //int tt = Convert.ToInt32(txttime.Text);
+            int tt = Convert.ToInt32(txttime.Text);
             //for (int i = 1; i < WellBore.wellBoreGrid.Count; i++)
             //{
             //    X = WellBore.wellBoreGrid[i].wellDepth;
-            //    Y = Result.wellborePressure[tt][i]/1000;
+            //    Y = Result.wellborePressure[tt][i] / 1000000;
             //    CV.Add(new ObservablePoint(X, Y));
             //}
             int length = WellBore.wellBoreGrid.Count - 1;
@@ -64,7 +64,7 @@ namespace CPWGI
                 },
             };
             lvcChart.Series = SC;
-            MessageBox.Show("画图完成！");
+            //MessageBox.Show("画图完成！");
         }
 
         public MainWindow()
@@ -80,12 +80,15 @@ namespace CPWGI
             WellBore = wellBoreView.wellBore;
             Mud = mudPropertyView.Mud;
             Gas = gasPropertyView.Gas;
-            WellBore.addSection(2000, 6, 3.5);
+            WellBore.addSection(4500, 6, 3.5);
             WellBore.meshWell();
             CC = new ControlCalculateClass(WellBore, Mud, Gas, Calculate, Result,PressureWellHead);
             CC.CalculateSteadyT(0, 0);
-            CC.CalMultiphaseFlow(5, 1);
-            MessageBox.Show("计算完成！");
+            Task.Run(
+                () => CC.CalMultiphaseFlow(5, 1)
+            );
+
+
         }
     }
 }

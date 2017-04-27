@@ -115,8 +115,11 @@ namespace CPWGI.Model
         public void updateGasProperty()
         {
             Z = calculateZAtPT();
+            Z = 1;
+            //todo 此处讲Z修改为1，年度也修改了，记得修改
             densityAtPt = Z * densityStand * pressure / pressureStand / temperature * temperatureStand;
             viscosity = calculateViscosityAtPT();
+            viscosity = 0.013 * 0.001;
         }
 
         /// <summary>

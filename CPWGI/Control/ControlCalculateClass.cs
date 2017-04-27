@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using CPWGI.Model;
 using CPWGI.MultiphaseCalculate;
 
@@ -17,7 +18,7 @@ namespace CPWGI.Control
         public ResultMatrix Result { get; set; }
         public int WellGridNumber { get; set; }
         public double PressureWellHead { get; set; }
-        public double ErrorWell = 50000, ErrorSegment = 1000, ErrorHoldup = 0.005;
+        public double ErrorWell = 100000, ErrorSegment = 500, ErrorHoldup = 0.001;
         public const double Gravity = 9.81;
         private double pressureFormation = 0;
         private double timeStep =5;
@@ -26,6 +27,7 @@ namespace CPWGI.Control
         private const double errorInitial = 999999999;
         //如果值小于此值，则停止继续迭代
         private readonly double errorMinimalStop = Math.Pow(0.1,10);
+        private Random random=new Random();
 
         public ControlCalculateClass(WellBoreClass well,DrillMudClass mud,GasClass gas,calculateMultiphaseBaseClass cal,ResultMatrix result,double wellHeadPressure)
         {
@@ -56,6 +58,7 @@ namespace CPWGI.Control
         /// </summary>
         public void CalculateSteadyT(double t,int tIndex)
         {
+            Calculate.CalFMethod = CalFrictionMethods.Simple;
             Result.addTime(t,WellGridNumber);
             double GridLength = 0;
             Result.wellborePressure[tIndex][0] = PressureWellHead;
@@ -101,6 +104,7 @@ namespace CPWGI.Control
                     ErrorSegmentCal = Result.wellboredPdZ[tIndex][i] * GridLength - PressuredH;
                 }
             }
+            Console.WriteLine(Result.wellborePressure[0][100]);
         }
 
         /// <summary>
@@ -108,7 +112,7 @@ namespace CPWGI.Control
         /// </summary>
         public void CalMultiphaseFlow(double t,int tIndex)
         {
-            //Calculate.CalFMethod = CalFrictionMethods.Simple;
+            //Calculate.CalFMethod = CalFrictionMethods.Corebook;
             //暂时设置气藏压力小于井底压力1Mpa
             //todo 气藏压力这里需要完善
             pressureFormation = Result.wellborePressure[0][WellGridNumber-1] + 1000000;
@@ -116,7 +120,7 @@ namespace CPWGI.Control
             bool stop = true;
             while(stop)//todo 此处暂写为死循环，应该判断气侵稳定后停止运算
             {
-                if (tIndex > 50) stop = false;
+                if (tIndex > 99) stop = false;
                 Result.addTime(t, WellGridNumber);
                 System.Diagnostics.Debug.Print(t-1 + "时刻井底压力为：" + Result.wellborePressure[tIndex-1][WellGridNumber-1]);
                 double errorWellCalculate = errorInitial;
@@ -124,11 +128,12 @@ namespace CPWGI.Control
                 //如果井口压力计算误差大于要求，则继续循环
                 while (Math.Abs(errorWellCalculate)>ErrorWell)
                 {
-                    if(errorWellCalculate==errorInitial)
-                    { kkWellL = 0.99;kkWell = 1;kkWellR = 1.01; }
+                    //System.Diagnostics.Debug.Print(t + "时刻井底压力为：" + Result.wellborePressure[tIndex][WellGridNumber - 1]);
+                    if (errorWellCalculate==errorInitial)
+                    { kkWellL = 0.95;kkWell = 1;kkWellR = 1.05; }
                     else if(Math.Abs(kkWellL-kkWellR)<errorMinimalStop)
-                    { kkWellL = 0.98; kkWell = 0.998; kkWellR = 1.1;
-                        System.Diagnostics.Debug.Print(tIndex + "时刻井底压力不收敛!");
+                    { kkWellL = 0.99; kkWell = 0.99+0.01*random.NextDouble(); kkWellR = 1.05;
+                        System.Diagnostics.Debug.Print(t + "时刻井底压力不收敛!");
                     }
                     else if (errorWellCalculate>0)
                     { kkWellR = kkWell;kkWell = (kkWell + kkWellL) / 2; }
@@ -141,7 +146,7 @@ namespace CPWGI.Control
                     Gas.setGasPT(Result.wellborePressure[tIndex][WellGridNumber-1], Result.wellboreTemperature[tIndex][WellGridNumber-1]);
                     Result.mudDensity[tIndex][WellGridNumber-1] = Mud.density;
                     Result.mudViscosity[tIndex][WellGridNumber-1] = Mud.viscosity;
-                    Result.holdupLiquid[tIndex][WellGridNumber - 1] = 1;
+                    Result.holdupLiquid[tIndex][WellGridNumber - 1] = 0;
                     Result.gasDensity[tIndex][WellGridNumber-1] = Gas.densityAtPt;
                     Result.gasViscosity[tIndex][WellGridNumber-1] = Gas.viscosity;
                     //设置标志，井身压力小于井口回压时直接跳出
@@ -176,10 +181,10 @@ namespace CPWGI.Control
                         {
                             
                             if (errorSegmentCalculate==errorInitial)
-                            { kkSegmentL = 0.5;kkSegment = 0.9;kkSegmentR = 1.1; }
+                            { kkSegmentL = 0.6;kkSegment = 0.8;kkSegmentR = 1.0; }
                             else if (Math.Abs(kkSegmentL-kkSegmentR)<errorMinimalStop)
                             {
-                                kkSegmentL = 0.8;kkSegment = 0.99;kkSegmentR = 1.1;
+                                kkSegmentL = 0;kkSegment = random.NextDouble();kkSegmentR = 1.0;
                                 System.Diagnostics.Debug.Print(tIndex + "时刻"+gridIndex+"井段压力不收敛!");
                             }
                             else if(errorSegmentCalculate>0)
@@ -188,7 +193,7 @@ namespace CPWGI.Control
                             { kkSegmentL = kkSegment; kkSegment = (kkSegment + kkSegmentR) / 2; }
 
                             //假设井段压力值进行计算
-                            Result.wellborePressure[tIndex][gridIndex] = Result.wellborePressure[tIndex-1][gridIndex] * kkSegment;
+                            Result.wellborePressure[tIndex][gridIndex] = Result.wellborePressure[tIndex][gridIndex+1] * kkSegment;
                             Result.wellboreTemperature[tIndex][gridIndex] = WellBore.wellBoreGrid[gridIndex].temperature;
                             Mud.setMudPt(Result.wellborePressure[tIndex][gridIndex], Result.wellboreTemperature[tIndex][gridIndex]);
                             Gas.setGasPT(Result.wellborePressure[tIndex][gridIndex], Result.wellboreTemperature[tIndex][gridIndex]);
@@ -196,34 +201,35 @@ namespace CPWGI.Control
                             Result.mudViscosity[tIndex][gridIndex] = Mud.viscosity;
                             Result.gasDensity[tIndex][gridIndex] = Gas.densityAtPt;
                             Result.gasViscosity[tIndex][gridIndex] = Gas.viscosity;
-                            System.Diagnostics.Debug.Print(gridIndex + "井段压力为：" + Result.wellborePressure[tIndex][gridIndex]);
+                            //System.Diagnostics.Debug.Print(gridIndex + "井段压力为：" + Result.wellborePressure[tIndex][gridIndex]);
                             //计算本段的含气率及液相速度
 
                             //如果上一个网格为单相流，则此网格也为单相流
-                            if (gridIndex < WellGridNumber - 2 && Result.holdupGas[tIndex][gridIndex + 2] <0.001)
+                            if (gridIndex < WellGridNumber - 2 && Result.holdupGas[tIndex][gridIndex + 1] <0.0001)
                             {
                                 Calculate.rheology = rheologys.singleMud;
                                 Calculate.holdupGas = 0;
+                                Result.holdupGas[tIndex][gridIndex] = 0;
                                 Result.gasVolocity[tIndex][gridIndex] = 0;
                                 Result.holdupLiquid[tIndex][gridIndex] = 1;
                                 //要注意，使用的是上一个网格的截面积，注意网格划分顺序与计算顺序相反
-                                Result.mudVolocity[tIndex][gridIndex] = ((Result.mudInjection[tIndex][gridIndex] / WellBore.wellBoreGrid[gridIndex + 1].GridArea - (Result.mudDensity[tIndex][gridIndex] - Result.mudDensity[tIndex - 1][gridIndex]) * gridLength / timeStep)
-                                    + Result.mudDensity[tIndex][gridIndex + 1] * Result.mudVolocity[tIndex][gridIndex + 1]) / Result.mudDensity[tIndex][gridIndex];
+                                Result.gasVolocity[tIndex][gridIndex] = ((Result.gasInjection[tIndex][gridIndex] / WellBore.wellBoreGrid[gridIndex + 1].GridArea - (Result.gasDensity[tIndex][gridIndex] * Result.holdupGas[tIndex][gridIndex] - Result.gasDensity[tIndex - 1][gridIndex] * Result.holdupGas[tIndex - 1][gridIndex]) * gridLength / timeStep)
+                                    + Result.gasDensity[tIndex][gridIndex + 1] * Result.gasVolocity[tIndex][gridIndex + 1]) / Result.gasDensity[tIndex][gridIndex];
                             }
                             else
                             {
                                 double errorHoldupCalculate = errorInitial;
-                                double kkHoldupL = 0, kkHoldup = 0.5, kkHoldupR = 1;
+                                double kkHoldupL = 0, kkHoldup = 0.2, kkHoldupR = 0.5;
                                 double tensionInterFace = FlowHelpClass.CalculateTensionOfWaterAndGas(Result.wellborePressure[tIndex][gridIndex], Result.wellboreTemperature[tIndex][gridIndex]);
                                 //如果含气率误差超出设置值，或者气相速度为负，则继续迭代
                                 while (Math.Abs(errorHoldupCalculate)>ErrorHoldup || Result.holdupGas[tIndex][gridIndex]<0)
                                 {
-                                    System.Diagnostics.Debug.Print(gridIndex + "井段含气率：" + kkHoldup);
+                                    //System.Diagnostics.Debug.Print(gridIndex + "井段含气率：" + kkHoldup);
                                     if (errorHoldupCalculate == errorInitial)
                                     { kkHoldupL = 0; kkHoldup = 0.25; kkHoldupR = 1; }
                                     else if(Math.Abs(kkHoldupL-kkHoldupR)<errorMinimalStop)
                                     {
-                                        kkHoldupL = 0; kkHoldup = 0.25; kkHoldupR = 0.6;
+                                        kkHoldupL = 0; kkHoldup = random.NextDouble(); kkHoldupR = 1;
                                         System.Diagnostics.Debug.Print(tIndex + "时刻" + gridIndex + "含气率不收敛!");
                                     }
                                     else if(errorHoldupCalculate>0)
@@ -238,17 +244,21 @@ namespace CPWGI.Control
                                     Result.gasVolocity[tIndex][gridIndex] = ((Result.gasInjection[tIndex][gridIndex] / WellBore.wellBoreGrid[gridIndex + 1].GridArea - (Result.gasDensity[tIndex][gridIndex] * Result.holdupGas[tIndex][gridIndex] - Result.gasDensity[tIndex - 1][gridIndex] * Result.holdupGas[tIndex-1][gridIndex]) * gridLength / timeStep)
                                     + Result.gasDensity[tIndex][gridIndex + 1] * Result.gasVolocity[tIndex][gridIndex + 1]) / Result.gasDensity[tIndex][gridIndex];
                                     //如果计算气相速度小于0,说明气体回流，即含气率设置过大
+
+                                    if (Math.Abs(Result.gasVolocity[tIndex][gridIndex]) < 0.001)
+                                    { Result.gasVolocity[tIndex][gridIndex] = 0; }
                                     if (Result.gasVolocity[tIndex][gridIndex] < 0)
                                     { errorHoldupCalculate = 1; continue; }
+                                    
 
                                     Result.mudVolocity[tIndex][gridIndex] = ((Result.mudInjection[tIndex][gridIndex] / WellBore.wellBoreGrid[gridIndex + 1].GridArea - (Result.mudDensity[tIndex][gridIndex]*Result.holdupLiquid[tIndex][gridIndex] - Result.mudDensity[tIndex - 1][gridIndex]*Result.holdupLiquid[tIndex-1][gridIndex]) * gridLength / timeStep)
                                     + Result.mudDensity[tIndex][gridIndex + 1] * Result.mudVolocity[tIndex][gridIndex + 1]) / Result.mudDensity[tIndex][gridIndex];
 
-                                     Result.holdupGas[tIndex][gridIndex] = Calculate.calculateHoldupGas(Result.gasVolocity[tIndex][gridIndex], Result.mudVolocity[tIndex][gridIndex], Result.gasDensity[tIndex][gridIndex], Result.mudDensity[tIndex][gridIndex],
+                                    Calculate.calculateHoldupGas(Result.gasVolocity[tIndex][gridIndex], Result.mudVolocity[tIndex][gridIndex], Result.gasDensity[tIndex][gridIndex], Result.mudDensity[tIndex][gridIndex],
                                         Result.gasViscosity[tIndex][gridIndex], Result.mudViscosity[tIndex][gridIndex], tensionInterFace);
                                     Result.rheology[tIndex][gridIndex] = Calculate.rheology;
 
-                                    errorHoldupCalculate = kkHoldup - Result.holdupGas[tIndex][gridIndex];
+                                    errorHoldupCalculate = Result.holdupGas[tIndex][gridIndex] - Calculate.holdupGas;
 
                                 }
                             }
@@ -260,12 +270,12 @@ namespace CPWGI.Control
                             //todo 差分动量方程
                             // 求解压力 % 瞬态项 % 对流项 全隐格式 迎风格式
 
-                            Result.wellborePressure[tIndex][gridIndex] = Result.wellborePressure[tIndex][gridIndex + 1] - Gravity * gridLength * (Result.gasDensity[tIndex][gridIndex] * Result.holdupGas[tIndex][gridIndex] + Result.mudDensity[tIndex][gridIndex] * Result.holdupLiquid[tIndex][gridIndex]) - f * gridLength
-                                - gridLength / timeStep * (Result.gasDensity[tIndex][gridIndex] * Result.gasVolocity[tIndex][gridIndex] + Result.mudDensity[tIndex][gridIndex] * Result.mudVolocity[tIndex][gridIndex]) - (Result.gasDensity[tIndex - 1][gridIndex] * Result.gasVolocity[tIndex - 1][gridIndex] + Result.mudDensity[tIndex - 1][gridIndex] * Result.mudVolocity[tIndex - 1][gridIndex]);
+                            double temp = Result.wellborePressure[tIndex][gridIndex + 1] - Gravity * gridLength * (Result.gasDensity[tIndex][gridIndex] * Result.holdupGas[tIndex][gridIndex] + Result.mudDensity[tIndex][gridIndex] * Result.holdupLiquid[tIndex][gridIndex]) - f * gridLength
+                                - gridLength / timeStep * (Result.gasDensity[tIndex][gridIndex] * Result.gasVolocity[tIndex][gridIndex] + Result.mudDensity[tIndex][gridIndex] * Result.mudVolocity[tIndex][gridIndex] - Result.gasDensity[tIndex - 1][gridIndex] * Result.gasVolocity[tIndex - 1][gridIndex] - Result.mudDensity[tIndex - 1][gridIndex] * Result.mudVolocity[tIndex - 1][gridIndex]);
                             //    - Math.Pow(Result.gasDensity[tIndex][gridIndex] * Result.gasVolocity[tIndex][gridIndex], 2) / Result.holdupGas[tIndex][gridIndex] + Math.Pow(Result.mudDensity[tIndex][gridIndex] * Result.mudVolocity[tIndex][gridIndex], 2) / Result.holdupLiquid[tIndex][gridIndex]
                             //    - Math.Pow(Result.gasDensity[tIndex][gridIndex + 1] * Result.gasVolocity[tIndex][gridIndex + 1], 2) / Result.holdupGas[tIndex][gridIndex + 1] + Math.Pow(Result.mudDensity[tIndex][gridIndex + 1] * Result.mudVolocity[tIndex][gridIndex + 1], 2) / Result.holdupLiquid[tIndex][gridIndex + 1];  
 
-                            errorSegmentCalculate = Result.wellborePressure[tIndex - 1][gridIndex] * kkSegment - Result.wellborePressure[tIndex][gridIndex];
+                            errorSegmentCalculate = Result.wellborePressure[tIndex][gridIndex] - temp;
                         }
                     }
                     if (breakWhilePUnderHead == false)
@@ -274,7 +284,7 @@ namespace CPWGI.Control
                 t = t + timeStep;//todo 加上需要的步长
                 tIndex = tIndex + 1;
             }
-            
+            MessageBox.Show("瞬态计算完成");
         }
     }
 }

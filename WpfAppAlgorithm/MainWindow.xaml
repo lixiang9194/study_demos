@@ -6,7 +6,7 @@
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:WpfAppAlgorithm"
         mc:Ignorable="d"
-        Title="SortAlgroithm" Height="507.477" Width="777.146" FontSize="15" WindowState="Maximized">
+        Title="SortAlgroithm" FontSize="15" WindowState="Maximized">
 
     <Grid ShowGridLines="True" >
         <Grid.ColumnDefinitions>

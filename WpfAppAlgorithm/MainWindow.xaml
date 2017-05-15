@@ -1,0 +1,143 @@
+﻿<Window x:Class="WpfAppAlgorithm.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:local="clr-namespace:WpfAppAlgorithm"
+        mc:Ignorable="d"
+        Title="SortAlgroithm" Height="507.477" Width="777.146" FontSize="15" WindowState="Maximized">
+
+    <Grid ShowGridLines="True" >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Vertical" >
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Label Content="数组长度:"/>
+                <TextBox Name="arrayLengt"  Text="{Binding arrayLength}" Width="50"/>
+                <Button Name="GenerateArray" Content="生成随机数据" Margin="15,0,0,0"
+                        Click="GenerateArray_Click"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Label Content="暂停(ms):" />
+                <TextBox Margin="-1,0,0,0"  Text="{Binding pauseMillionSeconds}" Width="50"/>
+                <Button Name="SortArrayUseAllFunction" Content="运行所有排序" Margin="15,0,0,0"
+                        Click="SortArrayUseAllFunction_Click"/>
+            </StackPanel>
+
+            <lvc:CartesianChart  Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding originList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+        
+        <StackPanel Grid.Column="1" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="插入排序：直接插入排序"></Label>
+                <Button Content="点击排序" Name="SortDirect" Click="SortDirect_Click"/>
+            </StackPanel>
+            
+            <lvc:CartesianChart Height="175">
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding insertSortList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="插入排序：希尔排序"></Label>
+                <Button Content="点击排序" Name="ShellSort" Click="ShellSort_Click"/>
+            </StackPanel>
+            <lvc:CartesianChart Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding shellSortList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="0" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="选择排序：选择排序"></Label>
+                <Button Content="点击排序" Name="SelectSort" Click="SelectSort_Click"/>
+            </StackPanel>
+            <lvc:CartesianChart Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding selectSortList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="1" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="选择排序：堆排序"></Label>
+                <Button Content="点击排序" Name="HeapSort" Click="HeapSort_Click"/>
+            </StackPanel>
+            <lvc:CartesianChart Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding HeapSortList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="2" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="交换排序：冒泡排序"></Label>
+                <Button Content="点击排序" Name="BubbleSort" Click="BubbleSort_Click"/>
+            </StackPanel>
+            <lvc:CartesianChart Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding bubbleSortList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Grid.Column="0" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="交换排序：快速排序"></Label>
+                <Button Content="点击排序" Name="QuickSort" Click="QuickSort_Click"/>
+            </StackPanel>
+            <lvc:CartesianChart Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding quickSortList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Grid.Column="1" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="交换排序：快速排序(多线程)"></Label>
+                <Button Content="点击排序" Name="QuickSortUseThreads" Click="QuickSortUseThreads_Click"/>
+            </StackPanel>
+            <lvc:CartesianChart Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding quickSortUseThreadsList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Grid.Column="2" >
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="归并排序"></Label>
+                <Button Content="点击排序" Name="MergeSort" Click="MergeSort_Click"/>
+            </StackPanel>
+            <lvc:CartesianChart Height="175" >
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="{Binding defaultSortList}" PointGeometrySize="0"/>
+                </lvc:CartesianChart.Series>
+            </lvc:CartesianChart>
+        </StackPanel>
+
+    </Grid>
+
+</Window>

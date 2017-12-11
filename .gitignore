@@ -1,0 +1,6 @@
+env/
+stanford-tensorflow-tutorials/
+mycode/data/
+mycode/graphs/
+*.pyc
+*.txt

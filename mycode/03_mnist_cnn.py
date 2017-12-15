@@ -8,11 +8,11 @@ mnist = input_data.read_data_sets("data/mnist", one_hot=True)
 
 # define func to help initalize weights and bias
 def weight_variable(shape):
-    initial = tf.truncated_normal(shape, stddev=0.1)
+    initial = tf.truncated_normal(shape)
     return tf.Variable(initial)
 
 def bias_variable(shape):
-    initial = tf.constant(0.1,shape=shape)
+    initial = tf.random_normal(shape)
     return tf.Variable(initial)
 
 # define func to help convolve and pooling
@@ -72,6 +72,8 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 # define the session
 sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
+out = sess.run(W_conv1)
+print out
 for i in range(20000):
     batch = mnist.train.next_batch(50)
     optimizer.run(feed_dict={x:batch[0], y_:batch[1], keep_prob:0.5})

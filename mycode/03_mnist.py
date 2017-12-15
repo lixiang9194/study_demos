@@ -33,7 +33,7 @@ loss = tf.reduce_mean(entropy)
 optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 
 with tf.Session() as sess:
-    writer = tf.summary.FileWriter('./graphs/mnist', sess.graph)
+    writer = tf.summary.FileWriter('./data/graphs/mnist', sess.graph)
 
     start_time = time.time()
     sess.run(tf.global_variables_initializer())

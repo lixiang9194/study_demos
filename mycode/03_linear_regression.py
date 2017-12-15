@@ -46,7 +46,7 @@ loss = tf.reduce_mean(tf.square(Y - Y_predicted, name='loss'))
 # loss = tf.reduce_sum(huber_loss(Y, Y_predicted))
 
 # step 6: using gradient descent with learning rate of 0.01
-optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+optimizer = tf.train.AdamOptimizer(learning_rate=1e-2).minimize(loss)
 
 with tf.Session() as sess:
     #step 7: initalize the necessary variables

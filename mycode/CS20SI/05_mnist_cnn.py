@@ -28,9 +28,9 @@ class Mnist_Cnn:
         with tf.device('/cpu:0'):
             with tf.name_scope('conv1'):
                 # input [128x28x28x1]
-                kernel = tf.Variable(tf.truncated_normal([5,5,1,32]), name='kernel')
+                self.kernel1 = tf.Variable(tf.truncated_normal([5,5,1,32]), name='kernel')
                 bias = tf.Variable(tf.random_normal([32]), name='bias')
-                conv = tf.nn.conv2d(self.x_image, kernel, strides=[1,1,1,1], padding='SAME') 
+                conv = tf.nn.conv2d(self.x_image, self.kernel1, strides=[1,1,1,1], padding='SAME') 
                 self.conv1 = tf.nn.relu(conv + bias)
 
             # input [128x28x28x32]
@@ -88,7 +88,9 @@ class Mnist_Cnn:
             with tf.name_scope('summary_batch'):
                 lbs = tf.summary.scalar('loss_batch', self.loss)
                 lbh = tf.summary.histogram('loss_batch', self.loss)
-                self.summary_batch = tf.summary.merge([lbs,lbh])
+                # wbs = tf.summary.scalar('weight1', tf.reshape(self.kernel1,[-1]))
+                wbh = tf.summary.histogram('weight1', self.kernel1)
+                self.summary_batch = tf.summary.merge([lbs,lbh,wbh])
 
         with tf.device('/cpu:0'):
             with tf.name_scope('summary_average'):
@@ -104,15 +106,15 @@ class Mnist_Cnn:
         self._create_para()
         self._create_conv()
 
-    def train_cnn(self, mnist, n_epocs=0, drop_out=0.5):
+    def train_cnn(self, mnist, n_epocs=10, drop_out=0.5):
         sess = tf.InteractiveSession()
         sess.run(tf.global_variables_initializer())
         
         # store the cnn net structure
-        writer = tf.summary.FileWriter('./data/mnist_cnn', sess.graph)
+        writer = tf.summary.FileWriter('./data/mnist_cnn01', sess.graph)
         # store and check the progress
         saver = tf.train.Saver()
-        ckpt = tf.train.get_checkpoint_state('./data/mnist_cnn')
+        ckpt = tf.train.get_checkpoint_state('./data/mnist_cnn01')
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
 
@@ -131,7 +133,7 @@ class Mnist_Cnn:
                 average_loss = total_loss/100.0
                 print ('Average loss at step {}: {:5.1f}'.format(index+1, average_loss))
                 total_loss = 0.0
-                saver.save(sess, './data/mnist_cnn/mnist-cnn', index)
+                saver.save(sess, './data/mnist_cnn01/mnist-cnn', index)
             
             accuracy_average = 0.0
             if (index + 1) % 1000 == 0:    

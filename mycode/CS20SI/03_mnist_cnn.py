@@ -8,11 +8,11 @@ mnist = input_data.read_data_sets("data/mnist", one_hot=True)
 
 # define func to help initalize weights and bias
 def weight_variable(shape):
-    initial = tf.truncated_normal(shape)
+    initial = tf.truncated_normal(shape ,stddev=0.1)
     return tf.Variable(initial)
 
 def bias_variable(shape):
-    initial = tf.random_normal(shape)
+    initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
 
 # define func to help convolve and pooling
@@ -63,7 +63,7 @@ y_conv = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
 cross_entropy = -tf.reduce_sum(y_*tf.log(y_conv))
 
 # define the optimizer
-optimizer = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+optimizer = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
 
 # test the model
 correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
@@ -72,21 +72,15 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 # define the session
 sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
-out = sess.run(W_conv1)
-print out
+
 for i in range(20000):
     batch = mnist.train.next_batch(50)
     optimizer.run(feed_dict={x:batch[0], y_:batch[1], keep_prob:0.5})
 
-    if i%1000 == 0:
-        print '-----------------------------------'
-        n_batches = int(mnist.test.num_examples/500)
-        total_correct_preds = 0
-        for i in range(n_batches):
-            X_batch, Y_batch = mnist.test.next_batch(500)
-            accuracy_batch = sess.run(accuracy, feed_dict={x:X_batch,y_:Y_batch, keep_prob:1.0})
-            total_correct_preds += accuracy_batch
-        print 'test accuracy {0}'.format(total_correct_preds/n_batches)
+    if i%100 == 0:
+        print '-----------------------------------'  
+        accuracy_batch = sess.run(accuracy, feed_dict={x:batch[0], y_:batch[1], keep_prob:1.0})
+        print 'step: {0}  test accuracy: {1}'.format(i+1, accuracy_batch)
 
 # calculate accuracy
 print '-----------------------------------'

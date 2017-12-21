@@ -109,9 +109,13 @@ def process_data(vocab_size, batch_size, skip_window):
     return get_batch(single_gen, batch_size)
 
 
-# batch_gen = process_data(VOCAB_SIZE, BATCH_SIZE, SKIP_WINDOW)
-if __name__ == '__main__':
+def main():
     batch_gen = process_data(VOCAB_SIZE, BATCH_SIZE, SKIP_WINDOW)
     batch = batch_gen.next()
     print(batch[0][0],batch[1][0])
 
+# batch_gen = process_data(VOCAB_SIZE, BATCH_SIZE, SKIP_WINDOW)
+if __name__ == '__main__':
+    VGG_DOWNLOAD_LINK = 'http://www.vlfeat.org/matconvnet/models/imagenet-vgg-verydeep-19.mat'
+    EXPECTED_BYTES = 534904783
+    download()

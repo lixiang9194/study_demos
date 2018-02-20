@@ -52,3 +52,5 @@ DOWNLOADER_MIDDLEWARES = {
     'lzy_spider.middlewares.ProxyMiddleware': 101,
     'lzy_spider.middlewares.PhantomJSMiddleware': 110,
 }
+
+DOWNLOAD_HANDLERS = {'s3': None}

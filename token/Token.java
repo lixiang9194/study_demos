@@ -11,7 +11,7 @@ public abstract class Token {
         lineNumber = line;
     }
     public int getLineNumber() { return lineNumber; }
-    public boolean isIndentifier() { return false; }
+    public boolean isIdentifier() { return false; }
     public boolean isNumber() { return false; }
     public boolean isString() { return false; }
     public int getNumber() { throw new StoneException("not number token"); }

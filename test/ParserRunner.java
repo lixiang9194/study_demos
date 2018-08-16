@@ -1,9 +1,9 @@
-package stone;
+package stone.test;
 
+import stone.Lexer;
 import stone.ast.ASTree;
 import stone.exception.ParseException;
-import stone.parser.BasicParser;
-import stone.test.CodeDialog;
+import stone.BasicParser;
 import stone.token.Token;
 
 public class ParserRunner {

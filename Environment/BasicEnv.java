@@ -2,7 +2,7 @@ package stone.Environment;
 
 import java.util.HashMap;
 
-public class BasicEnv implements Environment{
+public abstract class BasicEnv implements Environment{
     protected HashMap<String, Object> values;
     public BasicEnv() {
         values = new HashMap<>();

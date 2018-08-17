@@ -4,11 +4,9 @@ import java.util.HashSet;
 import stone.ast.*;
 import stone.parser.Parser;
 import stone.parser.Parser.Operators;
-import stone.parser.PrimaryExpr;
+import stone.ast.PrimaryExpr;
 import stone.token.Token;
-import stone.Lexer;
 import stone.exception.ParseException;
-
 import static stone.parser.Parser.rule;
 
 public class BasicParser {

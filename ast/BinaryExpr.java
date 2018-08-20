@@ -29,6 +29,14 @@ public class BinaryExpr extends ASTList {
 
     protected Object computeAssign(Environment env, Object rvalue) {
         ASTree left = left();
+        if (left instanceof PrimaryExpr) {
+                PrimaryExpr p = (PrimaryExpr)left;
+                if (p.hasPostfix(0) && p.postfix(0) instanceof Dot) {
+                    Object t = ((PrimaryExpr)left).evalSubExpr(env, 1);
+                    if (t instanceof StoneObject)
+                        return setField((StoneObject)t, (Dot)p.postfix(0), rvalue);
+                }
+            }
         if (left instanceof Name) {
             env.put(((Name)left).name(), rvalue);
             return rvalue;
@@ -73,5 +81,15 @@ public class BinaryExpr extends ASTList {
             return a < b ? TRUE : FALSE;
         else
             throw new StoneException("bad operator", this);
+    }
+
+    protected Object setField(StoneObject obj, Dot expr, Object rvalue) {
+        String name = expr.name();
+        try {
+            obj.write(name, rvalue);
+            return rvalue;
+        } catch (StoneObject.AccessException e) {
+            throw new StoneException("bad member access " + location() + ": " + name);
+        }
     }
 }

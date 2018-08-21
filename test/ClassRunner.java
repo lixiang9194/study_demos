@@ -15,6 +15,7 @@ public class ClassRunner {
     }
 }
 /*
+测试用例
 class Position {
 	x = y = 0
 	def move (nx, ny) {

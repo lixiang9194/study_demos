@@ -12,3 +12,16 @@ public class ClosureRunner {
         bi.run();
     }
 }
+/*
+测试用例
+def fib (n)  {
+	if n < 2  {
+		n
+	} else {
+		fib(n-1) + fib(n-2)
+	}
+}
+t = currentTime()
+fib(33)
+print currentTime() - t + "msec"
+*/

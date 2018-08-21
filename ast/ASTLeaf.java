@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ASTLeaf extends ASTree {
-    private static ArrayList<ASTree> empty = new ArrayList<>();
+    private static ArrayList<ASTree> empty = new ArrayList<ASTree>();
     protected Token token;
     public ASTLeaf(Token t) { token = t; }
 

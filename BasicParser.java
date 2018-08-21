@@ -10,7 +10,7 @@ import stone.exception.ParseException;
 import static stone.parser.Parser.rule;
 
 public class BasicParser {
-    HashSet<String> reserved = new HashSet<>();
+    HashSet<String> reserved = new HashSet<String>();
     Operators operators = new Operators();
     Parser expr0 = rule();
     Parser primary = rule(PrimaryExpr.class)

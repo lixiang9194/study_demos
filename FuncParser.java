@@ -1,8 +1,6 @@
 package stone;
 
-import stone.ast.Arguments;
-import stone.ast.DefStmnt;
-import stone.ast.ParameterList;
+import stone.ast.*;
 import stone.parser.Parser;
 import static stone.parser.Parser.rule;
 
@@ -17,11 +15,17 @@ public class FuncParser extends BasicParser {
             .ast(expr).repeat(rule().sep(",").ast(expr));
     Parser postfix = rule().sep("(").maybe(args).sep(")");
 
+    //支持数组
+    Parser elements = rule(ArrayLiteral.class)
+            .ast(expr).repeat(rule().sep(",").ast(expr));
+
     public FuncParser() {
         reserved.add(")");
+        reserved.add("]");
         primary.repeat(postfix);
         simple.option(args);
         program.insertChoice(def);
+        primary.insertChoice(rule().sep("[").maybe(elements).sep("]"));
+        postfix.insertChoice(rule(ArrayRef.class).sep("[").ast(expr).sep("]"));
     }
-
 }

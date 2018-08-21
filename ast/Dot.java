@@ -3,8 +3,6 @@ package stone.ast;
 import stone.Environment.Environment;
 import stone.Environment.NestedEnv;
 import stone.exception.StoneException;
-
-import java.rmi.AccessException;
 import java.util.List;
 
 public class Dot extends Postfix {

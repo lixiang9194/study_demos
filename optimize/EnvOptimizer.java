@@ -5,6 +5,7 @@ import javassist.gluonj.*;
 import stone.Environment.Environment;
 import stone.Environment.Symbols;
 import stone.ast.*;
+import stone.exception.StoneException;
 import stone.token.Token;
 import java.util.List;
 
@@ -92,9 +93,13 @@ public class EnvOptimizer {
         }
 
         public void lookup(Symbols syms) {
-            Symbols.Location loc = syms.put(name());
-            nest = loc.nest;
-            index = loc.index;
+            Symbols.Location loc = syms.get(name());
+            if (loc == null)
+                throw new StoneException("undefined name: " + name(), this);
+            else {
+                nest = loc.nest;
+                index = loc.index;
+            }
         }
 
         public void lookupForAssign(Symbols syms) {

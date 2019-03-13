@@ -1,4 +1,5 @@
 <?php
+
 namespace think;
 
 use Swoole\Http\Server;
@@ -41,47 +42,59 @@ class SwooleServer
     //处理请求
     public function onRequest($request, $response)
     {
-        $this->initRequest($request);
+        $this->initGlobal($request);
         
         //捕获 tp 输出
         ob_start();
-        
+
         Container::get('app')->run()->send();
+        
         $res = ob_get_contents();
         ob_end_clean();
 
         //返回数据至客户端
         $response->end($res);
-
-        $this->server->close($request->fd);
+        
+        //清理php超全局变量
+        $this->clearGlobal();
+        
+        //$this->server->close();
     } 
 
-    private function initRequest($request)
+    private function initGlobal($request)
     {
-        // $_SERVER = [];
-        // $_GET = [];
-        // $_POST = [];
-
         if (isset($request->server)) {
-            $this->setPara2Global($request->server, $_SERVER);
-        } 
-        if (isset($request->header)) {
-            $this->setPara2Global($request->header, $_SERVER);
+            foreach ($request->server as $key => $value) {
+                $_SERVER[strtoupper($key)] = $value;
+            }
         }
+        if (isset($request->header)) {
+            foreach ($request->header as $key => $value) {
+                $_SERVER[strtoupper($key)] = $value;
+            }
+        }
+
+        //由于Request实例化后pathinfo()函数实现
+        //使用swoole服务器需设置此参数才能获取正确的请求路径
+        $_SERVER['argv'][1] = $_SERVER['REQUEST_URI'];
+
         if (isset($request->get)) {
-            $this->setPara2Global($request->get, $_GET);
+            foreach ($request->get as $key => $value) {
+                $_GET[$key] = $value;
+            }
         }
         if (isset($request->post)) {
-            $this->setPara2Global($request->post, $_POST);
+            foreach ($request->post as $key => $value) {
+                $_POST[$key] = $value;
+            }
         }
-
     }
 
-    private function setPara2Global($params, &$global)
+    private function clearGlobal()
     {
-        foreach ($params as $key => $value) {
-            $global[strtoupper($key)] = $value;
-        }
+        $_SERVER = [];
+        $_GET = [];
+        $_POST = [];
     }
 }
 

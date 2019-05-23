@@ -1,0 +1,11 @@
+package main
+
+const GIN_MODE="release"
+const LISTEN_ADDR = "127.0.0.1:8010"
+
+const TODO_REDIS_KEY = "vue-todoList"
+const REDIS_HOST = "127.0.0.1"
+const REDIS_PORT = "63793"
+const REDIS_PASS = "toor"
+const REDIS_DB = 0
+

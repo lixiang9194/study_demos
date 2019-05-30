@@ -28,3 +28,12 @@ RUN apt-get update &&\
     apt-get install -y --no-install-recommends python-setuptools &&\
     apt-get install -y --no-install-recommends python-pip &&\
     pip install ansible
+
+
+# Installs NodeJS and npm. The later will allow you to easily manage your frontend dependencies.
+RUN apt-get update &&\
+    apt-get install -y --no-install-recommends gnupg &&\
+    curl -sL https://deb.nodesource.com/setup_10.x | bash - &&\
+    apt-get update &&\
+    apt-get install -y --no-install-recommends nodejs &&\
+    npm config set registry https://registry.npm.taobao.org --global

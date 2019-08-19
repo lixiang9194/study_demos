@@ -78,3 +78,9 @@
 	将对二级索引的数据操作缓存下来，以减少二级索引的随机IO,达到合并操作的效果。
 	5.5版本前只支持insert操作，叫做insert buffer，后来支持了更多操作类型，改名为change buffer。
 
+* 常用参数
+	innodb_flush_at_trx_commit
+	sync_binlog
+	innodb_buffer_pool_size 控制 innodb使用的缓存大小，通常为物理内存的 70%至 80%
+	innodb_io_capacity 控制 innodb写日志的速度
+

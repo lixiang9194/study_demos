@@ -36,13 +36,10 @@ int main(int argc, char **argv) {
     }
     printf("start server on port: %d\n", SERVER_PORT);
 
-
     fd_set fds_read, fds_read_mask;
     FD_ZERO(&fds_read);
     FD_SET(0, &fds_read);
     FD_SET(listen_fd, &fds_read);
-
-    int client_conns[MAX_CONN];
 
     while (1) {
         fds_read_mask = fds_read;
@@ -67,19 +64,18 @@ int main(int argc, char **argv) {
             }
             printf("accept connection: %d\n", conn_fd);
 
-            //将连接加入 client_conns和 select 集合
-            client_conns[conn_fd] = 1;
+            //将连接加入 select 集合
             FD_SET(conn_fd, &fds_read);
         }
 
         //轮询所有连接获取输入
         char rcv_buf[MAX_MSG_LEN];
         char* send_buf;
-        for (int i = 1; i < MAX_CONN; i++)
+        for (int i = listen_fd+1; i < MAX_CONN; i++)
         {
-            bzero(rcv_buf, MAX_MSG_LEN);
-            if (client_conns[i] && FD_ISSET(i, &fds_read_mask))
+            if (FD_ISSET(i, &fds_read_mask))
             {
+                bzero(rcv_buf, MAX_MSG_LEN);
                 int rcv_len = read(i, rcv_buf, MAX_MSG_LEN);
                 if (rcv_len < 0) {
                     printf("client %d error!\n", i);
@@ -88,7 +84,6 @@ int main(int argc, char **argv) {
                     //关闭连接并清除相关信息
                     printf("client %d closed!\n", i);
                     FD_CLR(i, &fds_read);
-                    client_conns[i] = 0;
                     close(i);
                     continue;
                 }

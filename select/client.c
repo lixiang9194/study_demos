@@ -9,7 +9,6 @@
 #define MAX_MSG_LEN 10240
 
 
-
 int main(int argc, char **argv) {
     if (argc != 3) {
         printf("usage: client <ip> <port>\n");exit(0);
@@ -40,7 +39,7 @@ int main(int argc, char **argv) {
 
     while (1) {
         fds_read_mask = fds_read;
-        int rc = select(FD_SETSIZE, &fds_read_mask, NULL, NULL, NULL);
+        int rc = select(socket_fd+1, &fds_read_mask, NULL, NULL, NULL);
         if (rc <= 0) {
             printf("select failed\n");exit(0);
         }

@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <strings.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #define SERVER_PORT 10086
-#define MAX_CONN 80
-#define MAX_MSG_LEN 10240
+#define MAX_CONN 128
+#define MAX_MSG_LEN 1024
+
+int handle(int conn_fd);
 
 
 int main(int argc, char **argv) {
@@ -33,40 +35,53 @@ int main(int argc, char **argv) {
     }
     printf("start server on port: %d\n", SERVER_PORT);
 
-    int connfd;
+    int conn_fd;
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
-    connfd = accept(listen_fd, (struct sockaddr*) &client_addr, &client_len);
-    if (connfd < 0) {
-        printf("accept failed!\n");exit(0);
-    }
-    printf("accept connection: %d\n", connfd);
 
+    while(1) {
+        //接收客户端连接
+        bzero(&client_addr, client_len);
+        conn_fd = accept(listen_fd, (struct sockaddr*) &client_addr, &client_len);
+        if (conn_fd < 0) {
+            printf("accept failed!\n");exit(0);
+        }
+        //printf("accept connection: %d\n", conn_fd);
+
+        //处理客户端请求
+        handle(conn_fd);
+    }
+}
+
+
+int handle(int conn_fd) {
     char rcv_buf[MAX_MSG_LEN], send_buf[MAX_MSG_LEN];
-    int count = 0;
 
     for (;;) {
-        int n = read(connfd, rcv_buf, MAX_MSG_LEN);
-        if (n < 0) {
-            printf("connection error!\n");exit(0);
-        } else if (n == 0) {
-            printf("client closed!\n");exit(0);
+        bzero(rcv_buf, MAX_MSG_LEN);
+        int rcv_len = read(conn_fd, rcv_buf, MAX_MSG_LEN);
+        if (rcv_len < 0) {
+            printf("client %d error!\n", conn_fd);
+            return -1;
+        } else if (rcv_len == 0) {
+            //printf("client closed!\n");
+            return 0;
         }
-
-        rcv_buf[n] = 0;
-        printf("received %d bytes: %s\n", n, rcv_buf);
-        count++;
-
-        sleep(5);
+        rcv_buf[rcv_len] = 0;
+        //printf("client: %d msg: %s \n", conn_fd, rcv_buf);
 
         bzero(send_buf, MAX_MSG_LEN);
-        sprintf(send_buf, "Hi, %s", rcv_buf);
+        //PING 命令
+        if (strncmp(rcv_buf, "PING", 4) == 0) {
+            sprintf(send_buf, "PONG\n");
+        } else {
+            sprintf(send_buf, "error, command not support!\n");
+        }
 
-        int wn = send(connfd, send_buf, strlen(send_buf), 0);
+        int wn = send(conn_fd, send_buf, strlen(send_buf), 0);
         if (wn < 0) {
             printf("send data failed!\n");exit(0);
         }
-        printf("send %d bytes\n", wn);
+        //printf("send %d bytes\n", wn);
     }
-
 }

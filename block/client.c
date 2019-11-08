@@ -3,10 +3,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <strings.h>
+#include <string.h>
 #include <unistd.h>
 
-#define MAX_MSG_LEN 10240
+#define MAX_MSG_LEN 1024
 
 
 int main(int argc, char **argv) {
@@ -37,6 +37,9 @@ int main(int argc, char **argv) {
         if (rn < 0) {
             printf("read stdout error!\n");exit(0);
         }
+        if (rcv_buf[rn-1] == '\n') {
+            rcv_buf[rn-1] = 0;
+        }
 
         int sn = send(socket_fd, rcv_buf, rn, 0);
         if (sn < 0) {
@@ -49,7 +52,7 @@ int main(int argc, char **argv) {
             printf("read socket error!\n");exit(0);
         }
 
-        printf("receive message from server: %s\n", rcv_buf);
+        printf("%s\n", rcv_buf);
     }
 }
 

@@ -3,10 +3,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <strings.h>
 #include <unistd.h>
+#include <string.h>
 
-#define MAX_MSG_LEN 10240
+#define MAX_MSG_LEN 1024
 
 
 int main(int argc, char **argv) {

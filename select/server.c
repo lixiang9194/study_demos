@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <strings.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #define SERVER_PORT 10086
-#define MAX_CONN 1024
-#define MAX_MSG_LEN 10240
+#define MAX_CONN 128
+#define MAX_MSG_LEN 1024
+#define MAX_PATH_LEN 128
 
 int handle_msg(int conn_fd, char* rcv_buf, int rcv_len);
 char* run_cmd(char* cmd);
@@ -41,16 +42,13 @@ int main(int argc, char **argv) {
     FD_SET(0, &fds_read);
     FD_SET(listen_fd, &fds_read);
 
+    char rcv_buf[MAX_MSG_LEN];
+    char* send_buf;
     while (1) {
         fds_read_mask = fds_read;
         int n = select(FD_SETSIZE, &fds_read_mask, NULL, NULL, NULL);
         if (n <= 0) {
             printf("select failed\n");exit(0);
-        }
-
-        //处理标准输入
-        if (FD_ISSET(0, &fds_read_mask)) {
-            //
         }
 
         //处理连接
@@ -62,16 +60,15 @@ int main(int argc, char **argv) {
             if (conn_fd < 0) {
                 printf("accept failed!\n");exit(0);
             }
-            printf("accept connection: %d\n", conn_fd);
+            //printf("accept connection: %d\n", conn_fd);
 
             //将连接加入 select 集合
             FD_SET(conn_fd, &fds_read);
         }
 
         //轮询所有连接获取输入
-        char rcv_buf[MAX_MSG_LEN];
-        char* send_buf;
-        for (int i = listen_fd+1; i < MAX_CONN; i++)
+        int i;
+        for (i = listen_fd+1; i < MAX_CONN; i++)
         {
             if (FD_ISSET(i, &fds_read_mask))
             {
@@ -82,7 +79,7 @@ int main(int argc, char **argv) {
                     continue;
                 } else if (rcv_len == 0) {
                     //关闭连接并清除相关信息
-                    printf("client %d closed!\n", i);
+                    //printf("client %d closed!\n", i);
                     FD_CLR(i, &fds_read);
                     close(i);
                     continue;
@@ -100,12 +97,18 @@ int main(int argc, char **argv) {
 int handle_msg(int conn_fd, char* rcv_buf, int rcv_len) {
     char* send_buf;
     rcv_buf[rcv_len] = 0;
-    printf("client: %d msg: %s \n", conn_fd, rcv_buf);
+    //printf("client: %d msg: %s \n", conn_fd, rcv_buf);
+
+    //PING 命令
+    if (strncmp(rcv_buf, "PING", 4) == 0) {
+        char res_buf[8];
+        sprintf(res_buf, "PONG\n");
+        send_buf = res_buf;
 
     //pwd 命令
-    if (strcmp(rcv_buf, "pwd") == 0) {
-        char pwd_buf[256];
-        send_buf = getcwd(pwd_buf, 256);
+    } else if (strncmp(rcv_buf, "pwd", 3) == 0) {
+        char pwd_buf[MAX_PATH_LEN];
+        send_buf = getcwd(pwd_buf, MAX_PATH_LEN);
     
     //ls 命令
     } else if (strncmp(rcv_buf, "ls", 2) == 0) {
@@ -113,8 +116,8 @@ int handle_msg(int conn_fd, char* rcv_buf, int rcv_len) {
     
     // cd 命令
     } else if (strncmp(rcv_buf, "cd", 2) == 0) {
-        char target_dir[128];
-        bzero(target_dir, sizeof(target_dir));
+        char target_dir[MAX_PATH_LEN];
+        bzero(target_dir, MAX_PATH_LEN);
         memcpy(target_dir, rcv_buf + 3, rcv_len - 3);
         int rc = chdir(target_dir);
         //chdir 成功不返回信息
@@ -123,7 +126,7 @@ int handle_msg(int conn_fd, char* rcv_buf, int rcv_len) {
         }
 
         //chdir 出错则返回错误信息
-        char err_str[32];
+        char err_str[16];
         sprintf(err_str, "chdir failed!\n");
         send_buf = err_str;
     
@@ -146,8 +149,8 @@ int handle_msg(int conn_fd, char* rcv_buf, int rcv_len) {
 
 //通过popen执行命令
 char* run_cmd(char* cmd) {
-    char* res = malloc(10240);
-    bzero(res, sizeof(*res));
+    char* res = malloc(MAX_MSG_LEN);
+    bzero(res, MAX_MSG_LEN);
     char buf[256];
 
     FILE* cmd_fp = popen(cmd, "r");

@@ -4,11 +4,14 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include<sys/poll.h>
+#include <sys/poll.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #define SERVER_PORT 10086
 #define MAX_CONN 128
 #define MAX_MSG_LEN 1024
+
 
 int handle_msg(int conn_fd, char* rcv_buf, int rcv_len);
 char* run_cmd(char* cmd);
@@ -26,6 +29,7 @@ int main(int argc, char **argv) {
 
     int on = 1;
     setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+    fcntl(listen_fd, F_SETFL, fcntl(listen_fd, F_GETFL, 0) | O_NONBLOCK);
     int resb = bind(listen_fd, (struct sockaddr*) &server_addr, sizeof(server_addr));
     if (resb < 0) {
         printf("bind error!\n");exit(0);
@@ -57,10 +61,15 @@ int main(int argc, char **argv) {
         {
             struct sockaddr_in client_addr;
             socklen_t client_len = sizeof(client_addr);
+            errno = 0;
             int conn_fd = accept(listen_fd, (struct sockaddr*) &client_addr, &client_len);
+
             if (conn_fd < 0) {
+                //io not ready
+                if (errno == EAGAIN) continue;
                 printf("accept failed!\n");exit(0);
             }
+
             printf("accept connection: %d\n", conn_fd);
 
             //将连接加入 poll 集合
@@ -85,8 +94,14 @@ int main(int argc, char **argv) {
             bzero(rcv_buf, MAX_MSG_LEN);
             if (events_read[i].revents & POLLRDNORM)
             {
+                errno = 0;
                 int rcv_len = read(conn_fd, rcv_buf, MAX_MSG_LEN);
                 if (rcv_len < 0) {
+                    //io not ready
+                    if (errno == EAGAIN) {
+                        printf("io %d no block!\n", conn_fd);
+                        continue;
+                    }
                     printf("client %d error!\n", conn_fd);
                     continue;
                 } else if (rcv_len == 0) {

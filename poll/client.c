@@ -5,10 +5,9 @@
 #include <arpa/inet.h>
 #include <strings.h>
 #include <unistd.h>
-#include<sys/poll.h>
+#include <sys/poll.h>
 
 #define MAX_MSG_LEN 10240
-
 
 
 int main(int argc, char **argv) {

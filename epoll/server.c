@@ -4,9 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/poll.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/epoll.h>
 
 #define SERVER_PORT 10086
 #define MAX_CONN 128
@@ -42,66 +42,65 @@ int main(int argc, char **argv) {
     }
     printf("start server on port: %d\n", SERVER_PORT);
 
-
-    struct pollfd events[MAX_CONN];
-    int i;
-    for (i = 0; i < MAX_CONN; i++)
+    struct epoll_event event;
+    struct epoll_event* events_p;
+    int epoll_fd;
+    epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1)
     {
-        events[i].fd = -1;
+        printf("epoll create failed");
+        return -1;
     }
-    events[0].fd = listen_fd;
-    events[0].events = POLLRDNORM;
 
+    event.data.fd = listen_fd;
+    event.events = EPOLLIN | EPOLLET;
+    int rc = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listen_fd, &event);
+    if (rc == -1)
+    {
+        printf("epoll_ctl add failed");
+    }
+
+    events_p = calloc(MAX_CONN, sizeof(event));
 
     char rcv_buf[MAX_MSG_LEN];
     char* send_buf;
     while (1) {
-        int n = poll(events, MAX_CONN, -1);
+        int n = epoll_wait(epoll_fd, events_p, MAX_CONN, -1);
         if (n <= 0) {
             printf("poll failed\n");exit(0);
         }
 
-        //处理连接
-        if (events[0].revents & POLLRDNORM)
-        {
-            struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-            errno = 0;
-            int conn_fd = accept(listen_fd, (struct sockaddr*) &client_addr, &client_len);
-
-            if (conn_fd < 0) {
-                //io not ready
-                if (errno == EAGAIN) continue;
-                printf("accept failed!\n");exit(0);
-            }
-
-            //printf("accept connection: %d\n", conn_fd);
-
-            //将连接加入 poll 集合
-            int i;
-            for (i = 1; i < MAX_CONN; i++)
-            {
-                if (events[i].fd < 0)
-                {
-                    events[i].fd = conn_fd;
-                    events[i].events = POLLRDNORM;
-                    break;
-                }
-            }
-            if(i >= MAX_CONN) {
-                printf("connection has full, error!");
-                close(conn_fd);
-            }
-        }
-
         //轮询所有连接获取输入
         int i;
-        for (i = 1; i < MAX_CONN; i++)
+        for (i = 0; i < n; i++)
         {
-            int conn_fd = events[i].fd;
-            if (conn_fd < 0) continue;
-            if (events[i].revents & POLLRDNORM)
+            //接收客户端连接
+            if (events_p[i].data.fd == listen_fd)
             {
+                struct sockaddr_in client_addr;
+                socklen_t client_len = sizeof(client_addr);
+                errno = 0;
+                int conn_fd = accept(listen_fd, (struct sockaddr*) &client_addr, &client_len);
+
+                if (conn_fd < 0) {
+                    //io not ready
+                    if (errno == EAGAIN) continue;
+                    printf("accept failed!\n");exit(0);
+                }
+
+                //printf("accept connection: %d\n", conn_fd);
+
+                //将连接加入 epoll 集合
+                event.data.fd = conn_fd;
+                event.events = EPOLLIN | EPOLLET;
+                int rc = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_fd, &event);
+                if (rc == -1)
+                {
+                    printf("epoll_ctl add failed");
+                }
+
+            } else {
+                int conn_fd = events_p[i].data.fd;
                 errno = 0;
                 bzero(rcv_buf, MAX_MSG_LEN);
                 int rcv_len = read(conn_fd, rcv_buf, MAX_MSG_LEN);
@@ -115,7 +114,7 @@ int main(int argc, char **argv) {
                 } else if (rcv_len == 0) {
                     //关闭连接并清除相关信息
                     //printf("client %d closed!\n", conn_fd);
-                    events[i].fd = -1;
+                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, conn_fd, NULL);
                     close(conn_fd);
                     continue;
                 }

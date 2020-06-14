@@ -1,7 +1,10 @@
 package simpledb;
 
 import java.io.*;
-
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,15 +29,23 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
+    private Page[] pages;
+    private Map<PageId, Integer> pageInds;
+    private List<Integer> freePageInds;
+
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
     public BufferPool(int numPages) {
-        // some code goes here
+        this.pages = new Page[numPages];
+        this.pageInds = new HashMap<>();
+        this.freePageInds = new LinkedList<>();
+        for (int i = 0; i < numPages; i++) {
+            this.freePageInds.add(i);
+        }
     }
-    
     public static int getPageSize() {
       return pageSize;
     }
@@ -66,8 +77,26 @@ public class BufferPool {
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        if (this.pageInds.containsKey(pid)) {
+            return this.pages[this.pageInds.get(pid)];
+        }
+
+        Page page = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+
+        int ind = getFreePageIndex();
+        this.pageInds.put(pid, ind);
+        this.pages[ind] = page;
+
+        return page;
+    }
+
+
+    protected synchronized int getFreePageIndex() throws DbException {
+        if (freePageInds.isEmpty()) {
+            evictPage();
+        }
+        Integer ind = this.freePageInds.remove(0);
+        return ind;
     }
 
     /**

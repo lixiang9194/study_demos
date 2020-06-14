@@ -15,6 +15,10 @@ import java.util.*;
  */
 public class HeapFile implements DbFile {
 
+    private File dbFile;
+    private RandomAccessFile reader;
+    private TupleDesc td;
+
     /**
      * Constructs a heap file backed by the specified file.
      * 
@@ -23,7 +27,14 @@ public class HeapFile implements DbFile {
      *            file.
      */
     public HeapFile(File f, TupleDesc td) {
-        // some code goes here
+        this.dbFile = f;
+        try {
+            this.reader = new RandomAccessFile(f, "rw");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        this.td = td;
     }
 
     /**
@@ -32,8 +43,7 @@ public class HeapFile implements DbFile {
      * @return the File backing this HeapFile on disk.
      */
     public File getFile() {
-        // some code goes here
-        return null;
+        return dbFile;
     }
 
     /**
@@ -46,8 +56,7 @@ public class HeapFile implements DbFile {
      * @return an ID uniquely identifying this HeapFile.
      */
     public int getId() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return dbFile.getAbsoluteFile().hashCode();
     }
 
     /**
@@ -56,14 +65,24 @@ public class HeapFile implements DbFile {
      * @return TupleDesc of this DbFile.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return td;
     }
 
     // see DbFile.java for javadocs
     public Page readPage(PageId pid) {
-        // some code goes here
-        return null;
+        int pageSize = BufferPool.getPageSize();
+        int pgNo = pid.getPageNumber();
+        Page page = null;
+
+        try {
+            byte[] data = new byte[pageSize];
+            reader.seek(pgNo * pageSize);
+            reader.read(data);
+            page = new HeapPage((HeapPageId) pid, data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return page;
     }
 
     // see DbFile.java for javadocs
@@ -76,8 +95,7 @@ public class HeapFile implements DbFile {
      * Returns the number of pages in this HeapFile.
      */
     public int numPages() {
-        // some code goes here
-        return 0;
+        return (int)dbFile.length() / BufferPool.getPageSize();
     }
 
     // see DbFile.java for javadocs
@@ -98,8 +116,55 @@ public class HeapFile implements DbFile {
 
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
-        // some code goes here
-        return null;
+        return new DbFileIterator(){
+            private int pgNo;
+            private Iterator<Tuple> pgTps;
+
+            @Override
+            public void rewind() throws DbException, TransactionAbortedException {
+                this.open();
+            }
+
+            @Override
+            public void open() throws DbException, TransactionAbortedException {
+                this.pgNo = 0;
+                PageId pid = new HeapPageId(getId(), pgNo);
+                HeapPage page = (HeapPage)Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
+                this.pgTps = page.iterator();
+            }
+
+            @Override
+            public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+                if (!this.hasNext()) {
+                    throw new NoSuchElementException("no more tuples in file");
+                }
+                return this.pgTps.next();
+            }
+
+            @Override
+            public boolean hasNext() throws DbException, TransactionAbortedException {
+                if (this.pgTps == null) {
+                    return false;
+                }
+                if (this.pgTps.hasNext()) {
+                    return true;
+                }
+                if (++pgNo < numPages()) {
+                    PageId pid = new HeapPageId(getId(), pgNo);
+                    HeapPage page = (HeapPage)Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
+                    this.pgTps = page.iterator();
+                    return hasNext();
+                }
+
+                return false;
+            }
+
+            @Override
+            public void close() {
+                this.pgNo = 0;
+                this.pgTps = null;
+            }
+        };
     }
 
 }

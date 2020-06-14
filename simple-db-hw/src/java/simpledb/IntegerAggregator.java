@@ -1,11 +1,28 @@
 package simpledb;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Map.Entry;
+
 /**
  * Knows how to compute some aggregate over a set of IntFields.
  */
 public class IntegerAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+    private int gbField;
+    private int aField;
+    private Op what;
+    private Map<Field, Integer> aggrAns;
+    private Map<Field, Integer> aggrCount;
+    private int ans;
+    private int count;
+    private TupleDesc td;
+    private List<Tuple> tuples;
 
     /**
      * Aggregate constructor
@@ -23,7 +40,18 @@ public class IntegerAggregator implements Aggregator {
      */
 
     public IntegerAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        this.gbField = gbfield;
+        this.aField = afield;
+        this.what = what;
+        this.tuples = new ArrayList<>();
+
+        if (gbfield == NO_GROUPING) {
+            this.td = new TupleDesc(new Type[]{Type.INT_TYPE});
+        } else {
+            this.aggrAns = new HashMap<>();
+            this.aggrCount = new HashMap<>();
+            this.td = new TupleDesc(new Type[]{gbfieldtype, Type.INT_TYPE});
+        }
     }
 
     /**
@@ -34,7 +62,62 @@ public class IntegerAggregator implements Aggregator {
      *            the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        int af = ((IntField)tup.getField(aField)).getValue();
+        if (gbField == NO_GROUPING) {
+            switch (what) {
+                case MIN:
+                    ans = Math.min(ans, af);
+                    break;
+                case MAX:
+                    ans = Math.max(ans, af);
+                    break;
+                case COUNT:
+                    ans += 1;
+                    break;
+                case AVG:
+                    count += 1;
+                case SUM:
+                    ans += af;
+                    break;
+                default:
+                    throw new UnsupportedOperationException("no supported aggregate operation");
+            }
+        } else {
+            Field gbf = tup.getField(gbField);
+            Integer aAns = aggrAns.get(gbf);
+            Integer aCount = aggrCount.get(gbf);
+            if (aAns == null) {
+                if (what == Op.COUNT) {
+                    aAns = 1;
+                } else {
+                    aAns = af;
+                    aCount = 1;
+                }
+            } else {
+                switch (what) {
+                    case MIN:
+                        aAns = Math.min(aAns, af);
+                        break;
+                    case MAX:
+                        aAns = Math.max(aAns, af);
+                        break;
+                    case COUNT:
+                        aAns += 1;
+                        break;
+                    case AVG:
+                        aCount += 1;
+                    case SUM:
+                        aAns += af;
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("no supported aggregate operation");
+                }
+            }
+            aggrAns.put(gbf, aAns);
+            if (what == Op.AVG) {
+                aggrCount.put(gbf, aCount);
+            }
+        }
     }
 
     /**
@@ -46,9 +129,60 @@ public class IntegerAggregator implements Aggregator {
      *         the constructor.
      */
     public OpIterator iterator() {
-        // some code goes here
-        throw new
-        UnsupportedOperationException("please implement me for lab2");
+        return new OpIterator(){
+            private Iterator<Tuple> it;
+
+            @Override
+            public void rewind() throws DbException, TransactionAbortedException {
+                it = tuples.iterator();
+            }
+
+            @Override
+            public void open() throws DbException, TransactionAbortedException {
+                if (gbField == NO_GROUPING) {
+                    if (what == Op.AVG) {
+                        ans /= count;
+                    }
+                    Tuple t = new Tuple(td);
+                    t.setField(0, new IntField(ans));
+                    tuples.add(t);
+                } else {
+                    for (Entry<Field, Integer> e: aggrAns.entrySet()) {
+                        Field f = e.getKey();
+                        Integer aAns = e.getValue();
+                        if (what == Op.AVG) {
+                            Integer aCount = aggrCount.get(f);
+                            aAns /= aCount;
+                        }
+                        Tuple t = new Tuple(td);
+                        t.setField(0, f);
+                        t.setField(1, new IntField(aAns));
+                        tuples.add(t);
+                    }
+                }
+                it = tuples.iterator();
+            }
+
+            @Override
+            public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+                return it.next();
+            }
+
+            @Override
+            public boolean hasNext() throws DbException, TransactionAbortedException {
+                return it.hasNext();
+            }
+
+            @Override
+            public TupleDesc getTupleDesc() {
+                return td;
+            }
+
+            @Override
+            public void close() {
+                it = null;
+            }
+        };
     }
 
 }

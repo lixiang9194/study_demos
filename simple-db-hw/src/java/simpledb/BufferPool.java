@@ -2,6 +2,7 @@ package simpledb;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -160,8 +161,19 @@ public class BufferPool {
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        DbFile f = Database.getCatalog().getDatabaseFile(tableId);
+        List<Page> dirtyPages = f.insertTuple(tid, t);
+        for (Page p : dirtyPages) {
+            p.markDirty(true, tid);
+
+            //测试用例中有直接调用 page 方法插入的行为，因此进行缓存
+            Integer ind = pageInds.get(p.getId());
+            if (ind == null) {
+                ind = getFreePageIndex();
+                pageInds.put(p.getId(), ind);
+            }
+            pages[ind] = p;
+        }
     }
 
     /**
@@ -179,8 +191,12 @@ public class BufferPool {
      */
     public  void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+        int tableId = t.getRecordId().getPageId().getTableId();
+        DbFile f = Database.getCatalog().getDatabaseFile(tableId);
+        List<Page> dirtyPages = f.deleteTuple(tid, t);
+        for (Page p : dirtyPages) {
+            p.markDirty(true, tid);
+        }
     }
 
     /**
@@ -189,8 +205,10 @@ public class BufferPool {
      *     break simpledb if running in NO STEAL mode.
      */
     public synchronized void flushAllPages() throws IOException {
-        // some code goes here
-        // not necessary for lab1
+        Iterator<PageId> it = pageInds.keySet().iterator();
+        while (it.hasNext()) {
+            flushPage(it.next());
+        }
 
     }
 
@@ -203,8 +221,10 @@ public class BufferPool {
         are removed from the cache so they can be reused safely
     */
     public synchronized void discardPage(PageId pid) {
-        // some code goes here
-        // not necessary for lab1
+        if (pageInds.containsKey(pid)) {
+            Integer ind = pageInds.remove(pid);
+            freePageInds.add(ind);
+        }
     }
 
     /**
@@ -212,8 +232,10 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized  void flushPage(PageId pid) throws IOException {
-        // some code goes here
-        // not necessary for lab1
+        Integer ind = pageInds.get(pid);
+        Page p = pages[ind];
+        Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
+        p.markDirty(false, null);
     }
 
     /** Write all pages of the specified transaction to disk.
@@ -228,8 +250,20 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws DbException {
-        // some code goes here
-        // not necessary for lab1
+        Page ep = null;
+        for (Page p : pages) {
+            if (p.isDirty() == null) {
+                ep = p;
+                break;
+            }
+        }
+
+        if (ep == null) {
+            throw new DbException("no more clean buffer");
+        }
+
+        Integer ind = pageInds.remove(ep.getId());
+        freePageInds.add(ind);
     }
 
 }

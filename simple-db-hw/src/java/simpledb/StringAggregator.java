@@ -1,11 +1,25 @@
 package simpledb;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Map.Entry;
+
 /**
  * Knows how to compute some aggregate over a set of StringFields.
  */
 public class StringAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+    private int gbField;
+    private int aField;
+    private Map<Field, Integer> aggrCount;
+    private int count;
+    private TupleDesc td;
+    private List<Tuple> tuples;
 
     /**
      * Aggregate constructor
@@ -17,7 +31,19 @@ public class StringAggregator implements Aggregator {
      */
 
     public StringAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        if (what != Op.COUNT) {
+            throw new IllegalArgumentException("string aggregator only support count");
+        }
+        this.gbField = gbfield;
+        this.aField = afield;
+        this.tuples = new ArrayList<>();
+
+        if (gbfield == NO_GROUPING) {
+            this.td = new TupleDesc(new Type[]{Type.INT_TYPE});
+        } else {
+            this.aggrCount = new HashMap<>();
+            this.td = new TupleDesc(new Type[]{gbfieldtype, Type.INT_TYPE});
+        }
     }
 
     /**
@@ -25,7 +51,18 @@ public class StringAggregator implements Aggregator {
      * @param tup the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        Field af = tup.getField(aField);
+        if (af.toString().isEmpty()) return;
+
+        if (gbField == NO_GROUPING) {
+            count++;
+            return;
+        }
+
+        Field gbf = tup.getField(gbField);
+        Integer oc = aggrCount.get(gbf);
+        if (oc == null) oc = 0;
+        aggrCount.put(gbf, ++oc);
     }
 
     /**
@@ -37,8 +74,51 @@ public class StringAggregator implements Aggregator {
      *   aggregate specified in the constructor.
      */
     public OpIterator iterator() {
-        // some code goes here
-        throw new UnsupportedOperationException("please implement me for lab2");
+        return new OpIterator() {
+            private Iterator<Tuple> it;
+
+            @Override
+            public void rewind() throws DbException, TransactionAbortedException {
+                it = tuples.iterator();
+            }
+
+            @Override
+            public void open() throws DbException, TransactionAbortedException {
+                if (gbField == NO_GROUPING) {
+                    Tuple t = new Tuple(td);
+                    t.setField(0, new IntField(count));
+                    tuples.add(t);
+                } else {
+                    for (Entry<Field, Integer> e: aggrCount.entrySet()) {
+                        Tuple t = new Tuple(td);
+                        t.setField(0, e.getKey());
+                        t.setField(1, new IntField(e.getValue()));
+                        tuples.add(t);
+                    }
+                }
+                it = tuples.iterator();
+            }
+
+            @Override
+            public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
+                return it.next();
+            }
+
+            @Override
+            public boolean hasNext() throws DbException, TransactionAbortedException {
+                return it.hasNext();
+            }
+
+            @Override
+            public TupleDesc getTupleDesc() {
+                return td;
+            }
+
+            @Override
+            public void close() {
+                it = null;
+            }
+        };
     }
 
 }

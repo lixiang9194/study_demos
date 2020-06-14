@@ -39,3 +39,13 @@ java -jar dist/simpledb.jar convert test_join_file1.txt 3
 java -jar dist/simpledb.jar convert test_join_file2.txt 3
 ant
 java -classpath dist/simpledb.jar simpledb.TestJoin
+
+
+#lab3
+ant runtest -Dtest=BTreeFileReadTest
+ant runsystest -Dtest=BTreeScanTest
+ant runtest -Dtest=BTreeFileInsertTest
+ant runsystest -Dtest=BTreeFileInsertTest
+ant runtest -Dtest=BTreeFileDeleteTest
+ant runsystest -Dtest=BTreeFileDeleteTest
+

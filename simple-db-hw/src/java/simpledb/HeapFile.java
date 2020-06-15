@@ -96,6 +96,7 @@ public class HeapFile implements DbFile {
     private synchronized HeapPage addPage(TransactionId tid) throws IOException, TransactionAbortedException,
             DbException {
         HeapPageId pid = new HeapPageId(getId(), numPages());
+        Database.getBufferPool().lockPage(tid, pid, Permissions.READ_WRITE);
         byte[] data = HeapPage.createEmptyPageData();
         reader.seek(reader.length());
         reader.write(data);
@@ -121,8 +122,14 @@ public class HeapFile implements DbFile {
             pid = new HeapPageId(getId(), pgNo);
             page = (HeapPage)Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
             if (page.getNumEmptySlots() > 0) {
+                Database.getBufferPool().lockPage(tid, pid, Permissions.READ_WRITE);
+                if (page.getNumEmptySlots() == 0) {
+                    Database.getBufferPool().releasePage(tid, pid);
+                    continue;
+                }
                 break;
             }
+            Database.getBufferPool().releasePage(tid, pid);
             page = null;
         }
 

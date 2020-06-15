@@ -49,3 +49,13 @@ ant runsystest -Dtest=BTreeFileInsertTest
 ant runtest -Dtest=BTreeFileDeleteTest
 ant runsystest -Dtest=BTreeFileDeleteTest
 
+
+#lab4
+ant runtest -Dtest=LockingTest
+ant runtest -Dtest=TransactionTest
+ant runsystest -Dtest=AbortEvictionTest
+ant runtest -Dtest=BTreeNextKeyLockingTest
+ant runtest -Dtest=DeadlockTest
+ant runsystest -Dtest=TransactionTest
+ant runsystest -Dtest=BTreeTest
+

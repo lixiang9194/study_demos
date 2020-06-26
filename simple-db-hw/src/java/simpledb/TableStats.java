@@ -65,6 +65,10 @@ public class TableStats {
      * histograms.
      */
     static final int NUM_HIST_BINS = 100;
+    private int totalTuples;
+    private int totalPages;
+    private FieldHistogram[] his;
+    private int ioCostPerPage;
 
     /**
      * Create a new TableStats object, that keeps track of statistics on each
@@ -77,14 +81,63 @@ public class TableStats {
      *            sequential-scan IO and disk seeks.
      */
     public TableStats(int tableid, int ioCostPerPage) {
-        // For this function, you'll have to get the
-        // DbFile for the table in question,
-        // then scan through its tuples and calculate
-        // the values that you need.
-        // You should try to do this reasonably efficiently, but you don't
-        // necessarily have to (for example) do everything
-        // in a single scan of the table.
-        // some code goes here
+        this.ioCostPerPage = ioCostPerPage;
+        HeapFile file = (HeapFile)Database.getCatalog().getDatabaseFile(tableid);
+        totalPages =  file.numPages();
+
+        TupleDesc td = Database.getCatalog().getTupleDesc(tableid);
+        int nFields = td.numFields();
+        his = new FieldHistogram[nFields];
+
+        int[] max = new int[nFields];
+        int[] min = new int[nFields];
+
+        //计算每列最大值、最小值
+        TransactionId tid = new TransactionId();
+        DbFileIterator itp = file.iterator(tid);
+        try {
+            itp.open();
+            while (itp.hasNext()) {
+                Tuple t = itp.next();
+                for (int i = 0; i < nFields; i++) {
+                    Field f = t.getField(i);
+                    if (f.getType().equals(Type.INT_TYPE)) {
+                        int v = ((IntField) f).getValue();
+                        if (max[i] < v) {
+                            max[i] = v;
+                        }
+                        if (min[i] > v) {
+                            min[i] = v;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //初始化直方图
+        for (int i = 0; i < nFields; i++) {
+            if (td.getFieldType(i).equals(Type.INT_TYPE)) {
+                his[i] = new IntHistogram(NUM_HIST_BINS, min[i], max[i]);
+            } else {
+                his[i] = new StringHistogram(NUM_HIST_BINS);
+            }
+        }
+
+        //构造直方图
+        try {
+            itp.rewind();
+            while (itp.hasNext()) {
+                totalTuples++;
+                Tuple t = itp.next();
+                for (int i = 0; i < nFields; i++) {
+                    his[i].addValue(t.getField(i));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -100,8 +153,7 @@ public class TableStats {
      * @return The estimated cost of scanning the table.
      */
     public double estimateScanCost() {
-        // some code goes here
-        return 0;
+         return totalPages * ioCostPerPage;
     }
 
     /**
@@ -114,8 +166,7 @@ public class TableStats {
      *         selectivityFactor
      */
     public int estimateTableCardinality(double selectivityFactor) {
-        // some code goes here
-        return 0;
+        return (int)(totalTuples * selectivityFactor);
     }
 
     /**
@@ -147,16 +198,14 @@ public class TableStats {
      *         predicate
      */
     public double estimateSelectivity(int field, Predicate.Op op, Field constant) {
-        // some code goes here
-        return 1.0;
+        return his[field].estimateSelectivity(op, constant);
     }
 
     /**
      * return the total number of tuples in this table
      * */
     public int totalTuples() {
-        // some code goes here
-        return 0;
+        return totalTuples;
     }
 
 }

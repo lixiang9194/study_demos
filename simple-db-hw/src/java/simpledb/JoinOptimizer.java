@@ -107,11 +107,7 @@ public class JoinOptimizer {
             // You do not need to implement proper support for these for Lab 3.
             return card1 + cost1 + cost2;
         } else {
-            // Insert your code here.
-            // HINT: You may need to use the variable "j" if you implemented
-            // a join algorithm that's more complicated than a basic
-            // nested-loops join.
-            return -1.0;
+            return cost1 + card1 * cost2 + card1 * card2;
         }
     }
 
@@ -155,9 +151,13 @@ public class JoinOptimizer {
             String field2PureName, int card1, int card2, boolean t1pkey,
             boolean t2pkey, Map<String, TableStats> stats,
             Map<String, Integer> tableAliasToId) {
-        int card = 1;
-        // some code goes here
-        return card <= 0 ? 1 : card;
+        if (joinOp.equals(Predicate.Op.EQUALS)) {
+            if (t1pkey && t2pkey) return Math.min(card1, card2);
+            if (t1pkey) return card2;
+            if (t2pkey) return card1;
+            return Math.max(card1, card2);
+        }
+        return (int)(card1 * card2 * 0.3);
     }
 
     /**
@@ -217,11 +217,35 @@ public class JoinOptimizer {
             HashMap<String, TableStats> stats,
             HashMap<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
-        //Not necessary for labs 1--3
+        int num = joins.size();
+        PlanCache pc = new PlanCache();
+        CostCard bestPlan = new CostCard();
+        CostCard bestSubPlan = new CostCard();
+        for (int i=1; i<=num; i++) {
+            Set<Set<LogicalJoinNode>> subs = enumerateSubsets(joins, i);
+            bestPlan.cost = Double.MAX_VALUE;
+            for (Set<LogicalJoinNode> sub : subs) {
+                bestSubPlan.cost = Double.MAX_VALUE;
+                for (LogicalJoinNode j: sub) {
+                    CostCard card = computeCostAndCardOfSubplan(stats, filterSelectivities, j, sub, bestSubPlan.cost, pc);
+                    if (card != null) {
+                        if (card.cost < bestSubPlan.cost) {
+                            bestSubPlan = card;
+                        }
+                        if (card.cost < bestPlan.cost) {
+                            bestPlan = card;
+                        }
+                    }
+                }
+                pc.addPlan(sub, bestPlan.cost, bestPlan.card, bestPlan.plan);
+            }
+        }
 
-        // some code goes here
-        //Replace the following
-        return joins;
+        if (explain) {
+            printJoins(bestPlan.plan, pc, stats, filterSelectivities);
+        }
+
+        return bestPlan.plan;
     }
 
     // ===================== Private Methods =================================

@@ -59,3 +59,10 @@ ant runtest -Dtest=DeadlockTest
 ant runsystest -Dtest=TransactionTest
 ant runsystest -Dtest=BTreeTest
 
+
+#lab5
+ant runtest -Dtest=IntHistogramTest
+ant runtest -Dtest=TableStatsTest
+ant runtest -Dtest=JoinOptimizerTest
+ant runtest -Dtest=OrderJoinsTest
+ant runsystest -Dtest=QueryTest

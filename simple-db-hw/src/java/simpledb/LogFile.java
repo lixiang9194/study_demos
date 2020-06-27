@@ -3,6 +3,7 @@ package simpledb;
 
 import java.io.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.lang.reflect.*;
 
 /**
@@ -466,7 +467,35 @@ public class LogFile {
         synchronized (Database.getBufferPool()) {
             synchronized(this) {
                 preAppend();
-                // some code goes here
+                Long start = tidToFirstLogRecord.get(tid.getId());
+                raf.seek(start);
+
+                while(true) {
+                    try {
+                        int type = raf.readInt();
+                        long logTid = raf.readLong();
+                        if (type == CHECKPOINT_RECORD) {
+                            int nums = raf.readInt();
+                            while (nums -- > 0) {
+                                raf.readLong();
+                                raf.readLong();
+                            }
+                        } else if (type == UPDATE_RECORD) {
+                            Page p = readPageData(raf);
+                            readPageData(raf);
+
+                            if (logTid == tid.getId()) {
+                                Database.getCatalog().getDatabaseFile(p.getId().getTableId()).writePage(p);
+                                Database.getBufferPool().discardPage(p.getId());
+                            }
+                        }
+                        raf.readLong();
+                    } catch (EOFException e) {
+                        break;
+                    }
+                }
+
+                raf.seek(currentOffset);
             }
         }
     }
@@ -493,7 +522,83 @@ public class LogFile {
         synchronized (Database.getBufferPool()) {
             synchronized (this) {
                 recoveryUndecided = false;
-                // some code goes here
+                raf.seek(LONG_SIZE);
+
+                Map<Long, Integer> doTids = new HashMap<>();
+                while(true) {
+                    try {
+                        int type = raf.readInt();
+                        long logTid = raf.readLong();
+                        switch (type) {
+                            case BEGIN_RECORD:
+                                doTids.put(logTid, 1);
+                                break;
+                            case ABORT_RECORD:
+                                doTids.remove(logTid);
+                                break;
+                            case COMMIT_RECORD:
+                                doTids.put(logTid, 2);
+                                break;
+                            case UPDATE_RECORD:
+                                readPageData(raf);
+                                readPageData(raf);
+                                break;
+                            case CHECKPOINT_RECORD:
+                                int nums = raf.readInt();
+                                while (nums -- > 0) {
+                                    raf.readLong();
+                                    raf.readLong();
+                                }
+                                //checkpoint 前的commit已落盘，无需再 redo
+                                for (Entry<Long,Integer> entry : doTids.entrySet()) {
+                                    if (entry.getValue() == 2) {
+                                        doTids.remove(entry.getKey());
+                                    }
+                                }
+                                break;
+                        }
+                        raf.readLong();
+                    } catch (EOFException e) {
+                        break;
+                    }
+                }
+
+                raf.seek(LONG_SIZE);
+                while (true) {
+                    try {
+                        int type = raf.readInt();
+                        long logTid = raf.readLong();
+                        switch (type) {
+                            case UPDATE_RECORD:
+                                Integer ReUn = doTids.get(logTid);
+                                Page oriPage = readPageData(raf);
+                                Page newPage = readPageData(raf);
+                                if (ReUn != null) {
+                                    Page p = null;
+                                    if (ReUn == 1) {
+                                        p = oriPage;
+                                    } else {
+                                        p = newPage;
+                                    }
+                                    Database.getCatalog().getDatabaseFile(p.getId().getTableId()).writePage(p);
+                                    Database.getBufferPool().discardPage(p.getId());
+                                }
+                                break;
+                            case CHECKPOINT_RECORD:
+                                int nums = raf.readInt();
+                                while (nums -- > 0) {
+                                    raf.readLong();
+                                    raf.readLong();
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        raf.readLong();
+                    } catch (EOFException e) {
+                        break;
+                    }
+                }
             }
          }
     }

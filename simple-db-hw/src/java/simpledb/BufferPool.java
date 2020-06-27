@@ -144,27 +144,6 @@ public class BufferPool {
      */
     public void transactionComplete(TransactionId tid, boolean commit)
         throws IOException {
-        Iterator<PageLock> it = lockManager.iterator(tid);
-        while(it.hasNext()) {
-            PageLock lock = it.next();
-            PageId pid = lock.getPageId();
-            Integer ind = pageInds.get(pid);
-
-            //脏页不会被刷磁盘，如果不在缓存，一定是干净页,无需处理
-            if (ind == null) {
-                continue;
-            }
-
-            //事务提交，脏页落盘
-            if (commit && pages[ind].isDirty() != null) {
-                flushPage(pid);
-            }
-
-            //事务回滚，可能写的脏页还未标记，因此抛弃全部写页
-            if (!commit && lock.isWrite(tid)) {
-                discardPage(pid);
-            }
-        }
         lockManager.unLock(tid);
     }
 
@@ -258,15 +237,33 @@ public class BufferPool {
     private synchronized  void flushPage(PageId pid) throws IOException {
         Integer ind = pageInds.get(pid);
         Page p = pages[ind];
-        Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
-        p.markDirty(false, null);
+
+        // append an update record to the log, with
+        // a before-image and after-image.
+        if (ind != null & pages[ind].isDirty() != null) {
+            TransactionId dirtier = p.isDirty();
+            Database.getLogFile().logWrite(dirtier, p.getBeforeImage(), p);
+            Database.getLogFile().force();
+
+            Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(p);
+        }
     }
 
     /** Write all pages of the specified transaction to disk.
      */
     public synchronized  void flushPages(TransactionId tid) throws IOException {
-        // some code goes here
-        // not necessary for lab1|lab2
+        Iterator<PageLock> it = lockManager.iterator(tid);
+        while(it.hasNext()) {
+            PageLock lock = it.next();
+            PageId pid = lock.getPageId();
+            Integer ind = pageInds.get(pid);
+
+            if (ind != null && pages[ind].isDirty() != null) {
+                pages[ind].setBeforeImage();
+                flushPage(pid);
+                pages[ind].markDirty(false, null);
+            }
+        }
     }
 
     /**

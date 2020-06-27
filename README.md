@@ -8,9 +8,9 @@
 
 > 目前进度
 
-- lab1 done
-- lab2 done
-- lab3 done
-- lab4 done
-- lab5
-- lab6
+- [X] lab1
+- [X] lab2
+- [X] lab3
+- [X] lab4
+- [X] lab5
+- [X] lab6

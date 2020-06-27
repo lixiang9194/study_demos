@@ -66,3 +66,7 @@ ant runtest -Dtest=TableStatsTest
 ant runtest -Dtest=JoinOptimizerTest
 ant runtest -Dtest=OrderJoinsTest
 ant runsystest -Dtest=QueryTest
+
+
+#lab6
+ant runsystest -Dtest=LogTest

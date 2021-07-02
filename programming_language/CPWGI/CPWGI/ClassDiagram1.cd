@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CPWGI.MathHelper.MathSolveEquations" Collapsed="true">
+    <Position X="11" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MathHelper\MathSolveEquations.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Model.DrillMudClass" Collapsed="true">
+    <Position X="11" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIABIIABRAAAABAQAABAAAAQACAAQAAAAIAAE=</HashCode>
+      <FileName>Model\DrillMudClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Model.GasClass" Collapsed="true">
+    <Position X="12.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAIAFAEABAQQEAIEAAARBAAAQACgAQAAEAABgk=</HashCode>
+      <FileName>Model\GasClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Model.GasInjectionClass" Collapsed="true">
+    <Position X="14.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>Model\GasInjectionClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Model.WellBoreClass" Collapsed="true">
+    <Position X="11" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAgBAAQAAAAAABgAAQAAQAACAAAAAAAAAA=</HashCode>
+      <FileName>Model\WellBoreClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Model.WellSection" Collapsed="true">
+    <Position X="9.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAEAAAAgAAACAAAAAAAAA=</HashCode>
+      <FileName>Model\WellBoreClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Model.WellGrid" Collapsed="true">
+    <Position X="14.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAgAAACQAAAAAAAA=</HashCode>
+      <FileName>Model\WellBoreClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.MultiphaseCalculate.calculateMultiphaseBaseClass" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAASAAAAAMAGAAAAAAAAAAgAAACAgABAAAAA=</HashCode>
+      <FileName>MultiphaseCalculate\calculateMultiphaseBaseClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.MultiphaseCalculate.CalculateMultiphaseHasanKabir">
+    <Position X="6.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAQAAAAAIAAAAIgAAAAAgGAABAAAAIAAAAA=</HashCode>
+      <FileName>MultiphaseCalculate\CalculateMultiphaseHasanKabir.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.MultiphaseCalculate.CalculateMultiphasePerez">
+    <Position X="4.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAQAAACAIAAAAAgAAAAAAAAABAAAAIAAAIA=</HashCode>
+      <FileName>MultiphaseCalculate\CalculateMultiphasePerez.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.View.GasPropertyView" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>View\GasPropertyView.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CPWGI.View.MudPropertyView" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="12.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>View\MudPropertyView.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CPWGI.View.WellBoreView" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="12.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACBAAIEAAAAAAAAAAAAAAEAAEAAABAAAAAACQAAABAA=</HashCode>
+      <FileName>View\WellBoreView.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="CPWGI.View.myValidationRule" Collapsed="true">
+    <Position X="14.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>View\WellBoreView.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Control.ResultMatrix" Collapsed="true">
+    <Position X="9.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAADQAAQEAAAAAAQAACCQCAAAEAAAAAAAAgkABgAAAA=</HashCode>
+      <FileName>Control\ResultMatrix.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPWGI.Control.ControlCalculateClass" Collapsed="true">
+    <Position X="9.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAIQAAIAAAAAAIAAAQIBCAgAAIEAiAAAAAAAAA=</HashCode>
+      <FileName>Control\ControlCalculateClass.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="CPWGI.Model.gasTypes" Collapsed="true">
+    <Position X="12.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\GasClass.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="CPWGI.Model.calZMethods" Collapsed="true">
+    <Position X="11" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAQAAAEAACAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>Model\GasClass.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="CPWGI.Model.calViscosityMethods" Collapsed="true">
+    <Position X="9.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\GasClass.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Microsoft YaHei UI" Size="9" />
+</ClassDiagram>

@@ -269,3 +269,12 @@ nohup.out
 .vscode
 test/
 bin/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+*.ntvs*
+*.njsproj
+*.sln

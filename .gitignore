@@ -266,3 +266,6 @@ mycode/graphs/
 nohup.out
 .idea
 .DS_Store
+.vscode
+test/
+bin/

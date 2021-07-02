@@ -264,3 +264,5 @@ mycode/data/
 mycode/graphs/
 *.txt
 nohup.out
+.idea
+.DS_Store
